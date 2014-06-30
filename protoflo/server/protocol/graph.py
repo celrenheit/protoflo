@@ -141,7 +141,7 @@ class GraphProtocol (object):
 	def addNode (self, graph, payload, context):
 		graph.nodes.add(**args(payload, ["id", "component", "metadata"], 2))
 
-	def removeNode (self, graph, payload):
+	def removeNode (self, graph, payload, context):
 		graph.nodes.remove(**args(payload, ["id"], True))
 
 	def renameNode (self, graph, payload, context):

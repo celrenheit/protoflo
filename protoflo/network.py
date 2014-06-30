@@ -186,9 +186,7 @@ class Network (EventEmitter):
 			("addInitial", "edge", self.connections.addInitial),
 			("removeInitial", "edge", self.connections.removeInitial),
 		):
-			@self.graph.on(event)
-			def subscribeGraphHandler (data):
-				registerOp(op, data[key])
+			self.graph.on(event, lambda data: registerOp(op, data[key]))
 
 		@self.graph.on("renameNode")
 		def subscribeGraphHandler (data):
@@ -487,3 +485,6 @@ class Edges (object):
 			self.initials = []
 
 		reactor.callLater(0, send)
+
+class Error (Exception):
+	pass

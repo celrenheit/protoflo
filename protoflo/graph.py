@@ -436,17 +436,17 @@ class Nodes (EventEmitter):
 		self.graph.initials.remove(node = id)
 
 		toRemove = []
-		for exported in self.exports:
+		for exported in self.graph.exports:
 			if id.toLowerCase() == exported.process:
 				toRemove.append(exported)
 		for exported in toRemove:
-			self.exports.remove(exported.public)
+			self.graph.exports.remove(exported.public)
 
 		self.graph.inports.removeFromNode(id)
 		self.graph.outports.removeFromNode(id)
 		self.graph.groups.removeNode(id)
 
-		self.setNodeMetadata(id, {})
+		self.setMetadata(id, {})
 
 		try:
 			self.nodes.remove(node)
@@ -500,7 +500,7 @@ class Nodes (EventEmitter):
 	def setMetadata (self, id, metadata):
 		"""Set or change a node's metadata"""
 
-		node = self.get(oldId)
+		node = self.get(id)
 
 		if node is None:
 			return

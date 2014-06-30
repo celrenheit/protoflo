@@ -1,0 +1,11 @@
+graph.on '([a-zA-Z]+)'\, \(([a-zA-Z \,]+)\) =>
+@graph.on\('$1'\)def subscribeGraphHandler \($2\):
+
+	([a-zA-Z]+): \(
+	def $1 \(self,
+	
+unless payload.([a-z]+) or payload.([a-z]+)
+if "$1" not in payload or "$2" not in payload:
+
+payload.([a-z]+)
+payload["$1"]

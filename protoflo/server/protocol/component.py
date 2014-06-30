@@ -30,6 +30,7 @@ class ComponentProtocol (object):
 	def listComponents (self, payload, context):
 		def componentsLoaded (components):
 			for component in components:
+				print "Processing %s" % component
 				self.processComponent(loader, component, context)
 
 		def error (failure):
@@ -66,15 +67,21 @@ class ComponentProtocol (object):
 		outPorts = []
 
 		for portName, port in instance.inPorts.iteritems():
-			inPorts.append({
+			inPort = {
 				"id": portName,
 				"type": port.datatype,
 				"required": port.required,
 				"addressable": port.addressable,
-				"description": port.description,
-				"values": port.options["values"] if "values" in port.options else None,
-				"default": port.options["default"] if "default" in port.options else None
-			})
+				"description": port.description
+			}
+
+			if "values" in port.options and port.options["values"] is not None:
+				inPort["values"] = port.options["values"]
+
+			if "default" in port.options and port.options["default"] is not None:
+				inPort["default"] = port.options["default"]
+			
+			inPorts.append(inPort)
 
 		for portName, port in instance.outPorts.iteritems():
 			outPorts.append({

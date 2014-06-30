@@ -70,8 +70,8 @@ class NetworkProtocol (object):
 			# Run the network
 			network.connect().addCallback(networkConnected)
 
-		def networkConnected (result):
-			network.sendInitials()
+		def networkConnected (network):
+			network.connections.sendInitials()
 
 			@graph.on('addInitial')
 			def initNetwork_addInitial(data):

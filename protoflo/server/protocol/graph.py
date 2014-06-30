@@ -1,5 +1,7 @@
 from ...graph import Graph
 
+import copy
+
 class GraphProtocol (object):
 	def __init__ (self, transport):
 		self.transport = transport
@@ -72,13 +74,13 @@ class GraphProtocol (object):
 	def subscribeGraph (self, id, graph, context):
 		@graph.on('addNode')
 		def subscribeGraphHandler_addNode (data):
-			node = data["node"]
+			node = copy.deepcopy(data["node"])
 			node["graph"] = id
 			self.send('addnode', node, context)
 
 		@graph.on('removeNode')
 		def subscribeGraphHandler_removeNode (data):
-			node = data["node"]
+			node = copy.deepcopy(data["node"])
 			node["graph"] = id
 			self.send('removenode', node, context)
 
@@ -92,7 +94,7 @@ class GraphProtocol (object):
 
 		@graph.on('addEdge')
 		def subscribeGraphHandler_addEdge (data):
-			edge = data["edge"]
+			edge = copy.deepcopy(data["edge"])
 			edge["graph"] = id
 
 			if edge["src"]["index"] is None:
@@ -105,7 +107,7 @@ class GraphProtocol (object):
 
 		@graph.on('removeEdge')
 		def subscribeGraphHandler_removeEdge (data):
-			edge = data["edge"]
+			edge = copy.deepcopy(data["edge"])
 			edge["graph"] = id
 
 			if edge["src"]["index"] is None:
@@ -114,17 +116,11 @@ class GraphProtocol (object):
 			if edge["tgt"]["index"] is None:
 				del edge["tgt"]["index"]
 
-			edgeData = {
-				"src": edge["src"],
-				"tgt": edge["tgt"],
-				"metadata": edge["metadata"],
-				"graph": id
-			}
-			self.send('removeedge', edgeData, context)
+			self.send('removeedge', edge, context)
 
 		@graph.on('addInitial')
 		def subscribeGraphHandler_addInitial (data):
-			iip = data["edge"]
+			iip = copy.deepcopy(data["edge"])
 			iip["graph"] = id
 
 			if iip["tgt"]["index"] is None:
@@ -134,7 +130,7 @@ class GraphProtocol (object):
 
 		@graph.on('removeInitial')
 		def subscribeGraphHandler_removeInitial (data):
-			iip = data["edge"]
+			iip = copy.deepcopy(data["edge"])
 			iip["graph"] = id
 
 			if iip["tgt"]["index"] is None:

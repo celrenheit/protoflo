@@ -83,7 +83,6 @@ class Network (EventEmitter):
 	@defer.inlineCallbacks
 	def connect (self):
 		for node in self.graph.nodes:
-			print node
 			yield self.processes.add(**node)
 
 		for edge in self.graph.edges:
@@ -93,6 +92,8 @@ class Network (EventEmitter):
 			yield self.connections.addInitial(**iip)
 
 		self.subscribeGraph()
+
+		defer.returnValue(self)
 
 	def connectPort (self, socket, process, port, index, inbound):
 		if inbound == True:

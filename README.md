@@ -43,7 +43,7 @@ Status
 =======
 Prototyping
 
-Can create graphs using the NoFlo UI protocol.
+Can create and run graphs using the NoFlo UI protocol.
 
 License
 =======

@@ -17,11 +17,11 @@ Running
 1. Register ProtoFlo as a NoFlo runtime (discover what is your UID
    on NoFlo)
    ```
-   python protoflo.py register --user YOUR_UID --label ProtoFlo
+   python -m protoflo register --user YOUR_UID --label ProtoFlo
    ```
 2. Run ProtoFlo
    ```
-   python protoflo.py runtime
+   python -m protoflo runtime
    ```
 3. Create a new project on NoFlo selecting the ProtoFlo runtime
 4. Inside the new project/graph, select the appropriate ProtoFlo
@@ -30,12 +30,20 @@ Running
    `ws:\\localhost:3569`
 6. Try typing `Add` into the component search box on top-left
 
+
+Components
+==========
+
+Add components to protoflo/components directory (or any protoflo/components directory
+within Python path - based on Twisted Plugins). Compoents must implement IComponent.
+
+Graph-based libraries are not implemented.
+
 Status
 =======
 Prototyping
 
-Can run simple graphs defined by NoFlo .fbp and .json,
-can enumerate its components using the NoFlo UI protocol.
+Can create graphs using the NoFlo UI protocol.
 
 License
 =======

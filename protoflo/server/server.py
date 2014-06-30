@@ -8,6 +8,15 @@ import json
 from transport.base import BaseTransport
 
 class WebSocketRuntime (BaseTransport):
+	def __init__ (self):
+		BaseTransport.__init__(self, options = {
+			"capabilities": [
+				'protocol:graph',
+				'protocol:component',
+				'protocol:network'
+			]
+		})
+
 	def send (self, protocol, topic, payload, context):
 		if isinstance(payload, Exception):
 			payload = {

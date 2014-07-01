@@ -126,7 +126,7 @@ class Port (EventEmitter):
 			except KeyError:
 				raise IndexError("{:s}: Socket {:d} not available".format(self.id, index))
 
-		return any(s.connected for s in self.sockets)
+		return any(s.connected for s in self.sockets.itervalues())
 
 
 class InPort (Port):

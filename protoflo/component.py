@@ -85,7 +85,8 @@ class ComponentLoader (EventEmitter):
 			return d
 
 		if self.components is not None:
-			return d.callback(self.components)
+			d.callback(self.components)
+			return d
 
 		self.processing = True
 
@@ -109,9 +110,13 @@ class ComponentLoader (EventEmitter):
 
 	def load (self, name, delayed = False, metadata = None):
 		if not self.ready:
-			return self.listComponents().addCallback(
-				lambda result: self.load(name, delayed, metadata)
-			)
+			d = defer.Deferred()
+
+			@self.once("ready")
+			def load_onReady (data):
+				self.load(name, delayed, metadata).addCallbacks(d.callback, d.errback)
+
+			return d
 
 		try:
 			component = self.components[name]
@@ -140,3 +145,6 @@ class ComponentLoader (EventEmitter):
 
 		instance.icon = "square"
 
+
+class Error (Exception):
+	pass

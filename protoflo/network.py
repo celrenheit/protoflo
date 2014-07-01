@@ -13,7 +13,7 @@ class Network (EventEmitter):
 		network = cls(graph)
 		d = defer.Deferred()
 
-		def networkReady (result):
+		def networkReady (network):
 			d.callback(network)
 
 			# Send IIPs
@@ -22,7 +22,7 @@ class Network (EventEmitter):
 		def componentsLoaded (components):
 			# Empty network, no need to connect it up
 			if len(graph.nodes) == 0:
-				return networkReady()
+				return networkReady(network)
 
 			# In case of delayed execution we don't wire it up
 			if delayed:
@@ -64,7 +64,7 @@ class Network (EventEmitter):
 		if self.connectionCount == 0:
 			self._end()
 
-	@debounce(10)
+	@debounce(0.01)
 	def _end (self):
 		if self.connectionCount:
 			return
@@ -173,7 +173,7 @@ class Network (EventEmitter):
 			try:
 				op = graphOps.popleft()
 				processing = True
-				op["op"](op.details).addCallbacks(processOps, error)
+				op["op"](**op["details"]).addCallbacks(processOps, error)
 
 			except IndexError:
 				processing = False
@@ -380,7 +380,6 @@ class Edges (object):
 
 	def add (self, src, tgt, metadata = None):
 		socket = InternalSocket()
-		d = defer.Deferred()
 
 		# Check src node
 		try:
@@ -392,9 +391,11 @@ class Edges (object):
 			raise Error("No component defined for outbound node " + src["node"])
 
 		if not fromNode.component.ready:
+			d = defer.Deferred()
+
 			@fromNode.component.once("ready")
 			def addEdge (data):
-				self.add(src, target, metadata)
+				self.add(src, target, metadata).addCallbacks(d.callback, d.errback)
 
 			return d
 
@@ -408,9 +409,11 @@ class Edges (object):
 			raise Error("No component defined for inbound node " + tgt["node"])
 
 		if not toNode.component.ready:
+			d = defer.Deferred()
+
 			@toNode.component.once("ready")
 			def addEdge (data):
-				self.add(src, target, metadata)
+				self.add(src, target, metadata).addCallbacks(d.callback, d.errback)
 
 			return d
 
@@ -422,9 +425,9 @@ class Edges (object):
 
 		self.connections.append(socket)
 
-		return d.callback(None)
+		return defer.succeed(None)
 
-	def remove (self, src, tgt):
+	def remove (self, src, tgt, metadata = None):
 		for connection in self.connections[:]:
 			if tgt["node"] == connection.tgt["process"].id and tgt["port"] == connection.tgt["port"]:
 				connection.tgt["process"].component.inPorts[connection.tgt["port"]].detach(connection)
@@ -450,9 +453,11 @@ class Edges (object):
 			raise Error("No process defined for inbound node {:s}".format(tgt["node"]))
 
 		if not (to.component.ready or tgt["port"] in to.component.inPorts):
+			d = defer.Deferred()
+
 			@to.component.once("ready")
 			def addInitial (data):
-				self.addInitial(src, target, metadata)
+				self.addInitial(src, target, metadata).addCallbacks(d.callback, d.errback)
 
 			return d
 
@@ -461,30 +466,36 @@ class Edges (object):
 		self.connections.append(socket)
 		self.initials.append(Initial(socket, src["data"]))
 
-		return d.callback(None)
+		return defer.succeed(None)
 
-	def removeInitial (self, initial):
+	def removeInitial (self, src, tgt, metadata = None):
 		for connection in self.connections:
-			if initial.tgt["node"] == connection.tgt["process"].id \
-			and initial.tgt["port"] == connection.tgt["port"]:
+			if tgt["node"] == connection.tgt["process"].id \
+			and tgt["port"] == connection.tgt["port"]:
 				connection.tgt["process"].component.inPorts[connection.tgt["port"]].detach(connection)
 				self.connections.remove(connection)
 
-		return defer.succeed()
+		return defer.succeed(None)
 
 	def sendInitial (self, initial):
 		initial.socket.connect()
 		initial.socket.send(initial.data)
 		initial.socket.disconnect()
 
+		return defer.succeed(None)
+
 	def sendInitials (self):
+		d = defer.Deferred()
+
 		def send ():
 			for initial in self.initials:
 				self.sendInitial(initial)
 
 			self.initials = []
+			d.callback(None)
 
 		reactor.callLater(0, send)
+		return d
 
 class Error (Exception):
 	pass

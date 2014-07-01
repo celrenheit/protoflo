@@ -96,9 +96,7 @@ class NetworkProtocol (object):
 			self.send('icon', data, context)
 
 		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
-			@network.on(event)
-			def subscribeNetwork_handler (data):
-				self.send(event, prepareSocketEvent(data, payload), context)
+			network.on(event, lambda data: self.send(event, prepareSocketEvent(data, payload), context))
 
 		@network.on('end')
 		def subscribeNetwork_end (data):

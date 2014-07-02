@@ -48,6 +48,9 @@ class NetworkProtocol (object):
 				return self.initNetwork(graph, payload, context)
 			if topic == 'stop':
 				return self.stopNetwork(graph, payload, context)
+			if topic == 'edges':
+				return self.selectEdges(graph, payload, context)
+
 		except Error as e:
 			return self.send('error', e, context)
 
@@ -96,7 +99,14 @@ class NetworkProtocol (object):
 			self.send('icon', data, context)
 
 		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
-			network.on(event, lambda data: self.send(event, prepareSocketEvent(data, payload), context))
+			def subscribeNetwork_handle (data):
+				if "socket" in data:
+					if data['socket'].id not in context.selectedEdges:
+						return
+
+				self.send(event, prepareSocketEvent(data, payload), context)
+
+			network.on(event, subscribeNetwork_handle) 
 
 		@network.on('end')
 		def subscribeNetwork_end (data):
@@ -111,6 +121,26 @@ class NetworkProtocol (object):
 			return
 
 		self.networks[payload["graph"]].stop()
+
+	def selectEdges (self, graph, payload, context):
+		if payload["graph"] not in self.networks:
+			return
+
+		network = self.networks[payload["graph"]]
+		selected = []
+
+		for edge in payload["edges"]:
+			for connection in network.connections:
+				if "node" not in connection.src:
+					continue
+
+				if edge["tgt"]["node"] == connection.tgt["process"].id and edge["tgt"]["port"] == connection.tgt["port"]:
+					if edge["src"]["node"] == connection.src["process"].id and edge["src"]["port"] == connection.src["port"]:
+						selected.append(connection.id)
+
+		# Store this in the context so that it is individual to the client
+		# [ Can two clients connect to the same network?? ]
+		context.selectedEdges = selected
 
 class Error (Exception):
 	pass

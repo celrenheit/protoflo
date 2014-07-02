@@ -1,4 +1,5 @@
 from twisted.internet import reactor
+from twisted.internet.error import AlreadyCalled, AlreadyCancelled
 import functools
 from itertools import chain
 
@@ -105,7 +106,7 @@ def debounce (wait):
 
 			try:
 				debounced.t.cancel()
-			except AttributeError:
+			except (AttributeError, AlreadyCalled, AlreadyCancelled):
 				pass
 			debounced.t = reactor.callLater(wait, call_it)
 

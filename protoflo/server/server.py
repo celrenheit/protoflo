@@ -39,6 +39,7 @@ class NoFloUiProtocol (WebSocketServerProtocol):
 		return 'noflo'
 
 	def onOpen (self):
+		self.selectedEdges = []
 		self.sendPing()
 		pass
 
@@ -61,13 +62,26 @@ class NoFloUiProtocol (WebSocketServerProtocol):
 		)
 
 
-def runtime (port):
+debug = {
+	"factory": None,
+	"runtime": None,
+	"networks": None,
+	"graphs": None
+}
+
+
+def runtime (server, port):
 	import sys
 	log.startLogging(sys.stdout)
 
-	factory = WebSocketServerFactory("ws://localhost:" + str(port), debug = False)
+	factory = WebSocketServerFactory("ws://" + server + ":" + str(port), debug = False)
 	factory.protocol = NoFloUiProtocol
 	factory.runtime = WebSocketRuntime()
+
+	debug["factory"] = factory
+	debug["runtime"] = factory.runtime
+	debug["networks"] = factory.runtime.network.networks
+	debug["graphs"] = factory.runtime.graph.graphs
 
 	# Required for Chromium ~33 and newer
 	def accept (offers):
@@ -78,5 +92,7 @@ def runtime (port):
 	factory.setProtocolOptions(perMessageCompressionAccept = accept)
 
 	reactor.listenTCP(port, factory)
-	reactor.run()
+
+	if not reactor.running:
+		reactor.run()
 

@@ -13,9 +13,13 @@ def register (user_id, label, ip, port):
 	url = "/runtimes/" + runtime_id
 	headers = {"Content-type": "application/json"}
 	data = {
-		'type': 'protoflo', 'protocol': 'websocket',
-		'address': ip + ":" + str(port), 'id': runtime_id,
-		'label': label, 'port': port, 'user': user_id,
+		'type': 'protoflo', 
+		'protocol': 'websocket',
+		'address': "ws://" + ip + ":" + str(port), 
+		'id': runtime_id,
+		'label': label, 
+		'port': port, 
+		'user': user_id,
 		'secret': "122223333",
 	}
 
@@ -41,6 +45,7 @@ if __name__ == "__main__":
 	parser_register.add_argument('--port', type=int, help='WebSocket port for runtime', default=3569)
 
 	parser_runtime = subparsers.add_parser('runtime', help='Start runtime')
+	parser_runtime.add_argument('--ip', type=str, help='WebSocket IP for runtime', default='localhost')
 	parser_runtime.add_argument('--port', type=int, help='WebSocket port for runtime', default=3569)
 
 	#parser_run = subparsers.add_parser('run', help='Run a graph non-interactively')
@@ -52,7 +57,7 @@ if __name__ == "__main__":
 
 	elif args.command == 'runtime':
 		from protoflo.server.server import runtime
-		runtime(args.port)
+		runtime(args.ip, args.port)
 
 	#elif args.command == 'run':
 	#    net = Network(load_file(args.file))

@@ -1,4 +1,5 @@
 from twisted.internet import reactor, defer
+from twisted.python import failure
 
 from util import EventEmitter, debounce
 from socket import InternalSocket
@@ -175,26 +176,35 @@ class Network (EventEmitter):
 			try:
 				op = graphOps.popleft()
 				processing = True
-				op["op"](**op["details"]).addCallbacks(processOps, error)
+				op["op"](*op["details"]).addCallbacks(processOps, error)
 
 			except IndexError:
 				processing = False
 
-		def handler (event, key, op):
-			def subscribeGraphHandler (data):
-				registerOp(op, data[key])
+		def handler (event, item, op, keys):
+			def subscribeGraphHandler (data):\
+				d = data[item]
+				a = []
+
+				for k in keys:
+					try:
+						a.append(d[k])
+					except:
+						a.append(None)
+
+				registerOp(op, a)
 
 			return subscribeGraphHandler
 
-		for event, key, op in (
-			("addNode", "node", self.processes.add), 
-			("removeNode", "node", self.processes.remove),
-			("addEdge", "edge", self.connections.add),
-			("removeEdge", "edge", self.connections.remove),
-			("addInitial", "edge", self.connections.addInitial),
-			("removeInitial", "edge", self.connections.removeInitial),
+		for event, item, op, keys in (
+			("addNode", "node", self.processes.add, ("id", "component", "metadata")),
+			("removeNode", "node", self.processes.remove, ("id",)),
+			("addEdge", "edge", self.connections.add, ("src", "tgt", "metadata")),
+			("removeEdge", "edge", self.connections.remove, ("src", "tgt")),
+			("addInitial", "edge", self.connections.addInitial, ("src", "tgt", "metadata")),
+			("removeInitial", "edge", self.connections.removeInitial, ("tgt",)),
 		):
-			self.graph.on(event, handler(event, key, op))
+			self.graph.on(event, handler(event, item, op, keys))
 
 		@self.graph.on("renameNode")
 		def subscribeGraphHandler (data):
@@ -440,12 +450,15 @@ class Edges (object):
 
 		return defer.succeed(None)
 
-	def remove (self, src, tgt, metadata = None):
+	def remove (self, src, tgt):
 		for connection in self.connections[:]:
-			if tgt["node"] == connection.tgt["process"].id and tgt["port"] == connection.tgt["port"]:
+			if tgt["node"] == connection.tgt["process"].id \
+			and tgt["port"] == connection.tgt["port"]:
 				connection.tgt["process"].component.inPorts[connection.tgt["port"]].detach(connection)
 
-			if "node" in src and src["node"] is not None:
+			if connection.src is not None \
+			and "node" in src \
+			and src["node"] is not None:
 				if connection.tgt and src["node"] == connection.src["process"].id \
 				and src["port"] == connection.src["port"]:
 					connection.src["process"].component.outPorts[connection.src["port"]].detach(connection)
@@ -481,7 +494,7 @@ class Edges (object):
 
 		return defer.succeed(None)
 
-	def removeInitial (self, src, tgt, metadata = None):
+	def removeInitial (self, tgt):
 		for connection in self.connections:
 			if tgt["node"] == connection.tgt["process"].id \
 			and tgt["port"] == connection.tgt["port"]:
@@ -501,11 +514,15 @@ class Edges (object):
 		d = defer.Deferred()
 
 		def send ():
-			for initial in self.initials:
-				self.sendInitial(initial)
+			try:
+				for initial in self.initials:
+					self.sendInitial(initial)
 
-			self.initials = []
-			d.callback(None)
+				self.initials = []
+				d.callback(None)
+			except:
+				f = failure.Failure()
+				d.errback(f)
 
 		reactor.callLater(0, send)
 		return d

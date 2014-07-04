@@ -71,19 +71,21 @@ class NetworkProtocol (object):
 			self.subscribeNetwork(network, payload, context)
 
 			# Run the network
-			network.connect().addCallback(networkConnected)
+			return network.connect().addCallback(networkConnected)
 
 		def networkConnected (network):
-			network.connections.sendInitials()
-
 			@graph.on('addInitial')
 			def initNetwork_addInitial(data):
-				network.connections.sendInitials()
+				network.connections.sendInitials().addErrback(error)
+
+			return network.connections.sendInitials()
 
 		def error (failure):
 			self.send('error', failure.value, context)
 
-		Network.create(graph, delayed = True).addCallbacks(networkReady, error)
+		Network.create(graph, delayed = True) \
+		.addCallback(networkReady) \
+		.addErrback(error)
 
 	def subscribeNetwork (self, network, payload, context):
 		@network.on('start')

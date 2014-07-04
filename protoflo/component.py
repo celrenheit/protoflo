@@ -6,38 +6,52 @@ from util import EventEmitter
 from port import InPorts, OutPorts, InPort, OutPort
 from components import IComponent
 
+import copy
+
+def _combine (base, new):
+	if base is None:
+		return new
+	if new is None:
+		return base
+	return copy.deecopy(base).update(new)
+
 class Component (EventEmitter):
 	implements(IComponent)
 
 	description = ""
-	_icon = None
+	icon = None
 	ready = True
 	subgraph = False
+	inPorts = None
+	outPorts = None
 
-	@property
-	def icon (self):
-		return self._icon
-
-	@icon.setter
-	def icon (self, icon):
-		self._icon = icon
-		self.emit("icon", icon = icon)
-
-	def __init__ (self, inPorts = None, outPorts = None, metadata = None, **options):
+	def __init__ (self, inPorts = None, outPorts = None, metadata = None, icon = None, **options):
 		if isinstance(inPorts, InPorts):
 			self.inPorts = inPorts
 		else:
-			self.inPorts = InPorts(inPorts)
+			self.inPorts = InPorts(_combine(self.inPorts, inPorts))
 
 		if isinstance(outPorts, OutPorts):
 			self.outPorts = outPorts
 		else:
-			self.outPorts = OutPorts(outPorts)
+			self.outPorts = OutPorts(_combine(self.outPorts, outPorts))
 
 		self.metadata = metadata
 		self.options = options
 
 		self.initialize(**options)
+
+		# Icon getter / setter
+		self._icon = icon or self.icon
+
+		def getIcon (self):
+			return self._icon
+
+		def setIcon (self, icon):
+			self._icon = icon
+			self.emit("icon", icon = icon)
+
+		self.icon = property(getIcon, setIcon)
 
 	def error (self, e, groups = None, errorPort = 'error'):
 		if groups is None:
@@ -62,7 +76,7 @@ class Component (EventEmitter):
 		else:
 			raise e
 
-	def initialize (**options):
+	def initialize (self, **options):
 		pass
 
 	def shutdown (self):

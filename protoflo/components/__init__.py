@@ -203,20 +203,20 @@ def _generateCacheEntry (provider):
 	def collectDetails (components):
 		for fileName, objectName, componentName, component in components:
 			details = {
-				"description": component.description,
-				"icon": component.icon,
-				"subgraph": component.subgraph,
+				"description": str(component.description),
+				"icon": str(component.icon),
+				"subgraph": bool(component.subgraph),
 				"inPorts": [],
 				"outPorts": []
 			}
 
 			for portName, port in component.inPorts.iteritems():
 				inPort = {
-					"id": portName,
-					"type": port.datatype,
-					"required": port.required,
-					"addressable": port.addressable,
-					"description": port.description
+					"id": str(portName),
+					"type": str(port.datatype),
+					"required": bool(port.required),
+					"addressable": bool(port.addressable),
+					"description": str(port.description),
 				}
 
 				if "values" in port.options and port.options["values"] is not None:
@@ -229,11 +229,11 @@ def _generateCacheEntry (provider):
 
 			for portName, port in component.outPorts.iteritems():
 				details["outPorts"].append({
-					"id": portName,
-					"type": port.datatype,
-					"required": port.required,
-					"addressable": port.addressable,
-					"description": port.description
+					"id": str(portName),
+					"type": str(port.datatype),
+					"required": bool(port.required),
+					"addressable": bool(port.addressable),
+					"description": str(port.description),
 				})
 
 			# Instantiated for its side-effects.

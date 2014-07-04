@@ -259,10 +259,9 @@ class OutPort (Port):
 				socket.send(data)
 			else:
 				def send (_):
-					socket.off(send)
 					socket.send(data)
 
-				socket.on('connect', send)
+				socket.once('connect', send)
 				socket.connect()
 
 	def endGroup (self, socketId = None):

@@ -182,7 +182,7 @@ class Network (EventEmitter):
 				processing = False
 
 		def handler (event, item, op, keys):
-			def subscribeGraphHandler (data):\
+			def subscribeGraphHandler (data):
 				d = data[item]
 				a = []
 

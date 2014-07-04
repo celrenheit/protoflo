@@ -13,7 +13,7 @@ def _combine (base, new):
 		return new
 	if new is None:
 		return base
-	return copy.deecopy(base).update(new)
+	return copy.deepcopy(base).update(new)
 
 class Component (EventEmitter):
 	implements(IComponent)

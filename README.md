@@ -34,10 +34,12 @@ Running
 Components
 ==========
 
-Add components to protoflo/components directory (or any protoflo/components directory
-within Python path - based on Twisted Plugins). Compoents must implement IComponent.
+Modules with names beginning with "protoflo" on the Python Path
+are searched for components - they must have a "__components__" attribute which is
+a dict listing the components. Components can be IComponent
+classes or methods which return IComponent objects. Alternatively,
+they can be a filename pointing to a json or fbp graph file.
 
-Graph-based libraries are not implemented.
 
 Status
 =======
@@ -52,7 +54,6 @@ MIT
 
 TODO:
 ======
-* Allow to build/run graphs using NoFlo UI protocol.
 * Write tests
 * Implement components for glib/GI, incl mainloop. GTK+ example
 * Implement port2port NoFlo Websocket protocol

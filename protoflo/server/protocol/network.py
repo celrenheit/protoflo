@@ -98,7 +98,7 @@ class NetworkProtocol (object):
 			data["graph"] = payload["graph"]
 			self.send('icon', data, context)
 
-		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
+		def handle (event):
 			def subscribeNetwork_handle (data):
 				if "socket" in data:
 					if data['socket'].id not in context.selectedEdges:
@@ -106,7 +106,10 @@ class NetworkProtocol (object):
 
 				self.send(event, prepareSocketEvent(data, payload), context)
 
-			network.on(event, subscribeNetwork_handle) 
+			return subscribeNetwork_handle
+
+		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
+			network.on(event, handle(event))
 
 		@network.on('end')
 		def subscribeNetwork_end (data):
@@ -126,16 +129,18 @@ class NetworkProtocol (object):
 		if payload["graph"] not in self.networks:
 			return
 
+		# TODO: make this work without the network.
+
 		network = self.networks[payload["graph"]]
 		selected = []
 
 		for edge in payload["edges"]:
 			for connection in network.connections:
-				if "node" not in connection.src:
+				if connection.src is None or "process" not in connection.src:
 					continue
 
-				if edge["tgt"]["node"] == connection.tgt["process"].id and edge["tgt"]["port"] == connection.tgt["port"]:
-					if edge["src"]["node"] == connection.src["process"].id and edge["src"]["port"] == connection.src["port"]:
+				if edge["tgt"]["process"] == connection.tgt["process"].id and edge["tgt"]["port"] == connection.tgt["port"]:
+					if edge["src"]["process"] == connection.src["process"].id and edge["src"]["port"] == connection.src["port"]:
 						selected.append(connection.id)
 
 		# Store this in the context so that it is individual to the client

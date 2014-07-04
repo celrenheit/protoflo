@@ -57,5 +57,7 @@ def Boolean (metadata = None):
 
 __components__ = {
 	'Str': Str,
-	'Int': Int
+	'Int': Int,
+	'Float': Float,
+	'Boolean': Boolean
 }

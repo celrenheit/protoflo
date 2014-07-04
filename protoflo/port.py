@@ -47,7 +47,7 @@ class Port (EventEmitter):
 	@property
 	def id (self):
 		if self.node is not None and self.name is not None:
-			return " ".join(self.node, self.name.upper())
+			return " ".join([self.node, self.name.upper()])
 
 		return "Port"
 

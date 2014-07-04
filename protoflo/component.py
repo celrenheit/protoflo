@@ -51,7 +51,7 @@ class Component (EventEmitter):
 			self._icon = icon
 			self.emit("icon", icon = icon)
 
-		self.icon = property(getIcon, setIcon)
+		setattr(self.__class__, "icon", property(getIcon, setIcon))
 
 	def error (self, e, groups = None, errorPort = 'error'):
 		if groups is None:

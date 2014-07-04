@@ -50,7 +50,12 @@ class _MathComponent (Component):
 				"disconnect": False
 			}
 			if self.secondary is not None:
-				calculate()
+				try:
+					calculate()
+				except TypeError:
+					self.error(TypeError("Must pass numbers to mathematical components"))
+				except Exception as e:
+					self.error(e)
 
 		@primaryPort.on('endgroup')
 		def onEndGroup (data):

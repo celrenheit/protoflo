@@ -1,4 +1,5 @@
 from ...component import ComponentLoader
+from twisted.python import log
 
 class ComponentProtocol (object):
 
@@ -33,6 +34,8 @@ class ComponentProtocol (object):
 				self.sendComponent(component, context)
 
 		def error (failure):
+			if failure.type.__name__ != "Error":
+				log.err(failure)
 			self.send('error', failure.value, context)
 
 		#baseDir = self.transport.options.baseDir

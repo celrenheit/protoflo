@@ -1,4 +1,5 @@
 from ...network import Network
+from twisted.python import log
 
 def prepareSocketEvent (event, req):
 	payload = {
@@ -81,6 +82,8 @@ class NetworkProtocol (object):
 			return network.connections.sendInitials()
 
 		def error (failure):
+			if failure.type.__name__ != "Error":
+				log.err(failure)
 			self.send('error', failure.value, context)
 
 		Network.create(graph, delayed = True) \

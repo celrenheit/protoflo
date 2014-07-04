@@ -1,13 +1,16 @@
 from zope.interface import Interface, Attribute
 
-from twisted.python import log
-from twisted.python.modules import getModule
-from twisted.python.reflect import namedAny
-from twisted.plugin import pluginPackagePaths, pickle
+from twisted.internet import defer
+from twisted.python import log, failure, modules
+from twisted.python.reflect import namedModule, namedAny
+from twisted.python.filepath import FilePath
+from twisted.plugin import pickle
 
-__path__.extend(pluginPackagePaths(__name__))
-__all__ = []
+import os, sys
 
+# Plugin modules "protoflo_*" must have an __init__.py with a __components__ dict attribute.
+# This lists the name: class / genreator function / relative path to '.fbp' or '.json' file.
+# May also have name and description attributes.
 
 class IComponent (Interface):
 	description = Attribute("""
@@ -67,18 +70,25 @@ class IComponent (Interface):
 
 
 class CachedComponent (object):
-	def __init__ (self, dropin, name, description):
+	def __init__ (self, dropin, fileName, objectName, componentName, details):
 		self.dropin = dropin
-		self.fullName = dropin.moduleName.split('.')[-1] + '/' + name
-		self.name = name
-		self.description = description
+		self.fileName = fileName
+		self.objectName = objectName
+		self.componentName = componentName
+		self.details = details
 		self.dropin.components.append(self)
 
 	def __repr__ (self):
-		return '<CachedComponent {:s}>'.format(self.fullName)
+		return '<CachedComponent {:s} ({:s})>'.format(
+			self.componentName,
+			self.objectName or self.fileName
+		)
 
 	def load (self):
-		return namedAny(self.dropin.moduleName + '.' + self.name)
+		if self.objectName is not None:
+			return namedAny(self.objectName)
+		else:
+			return self.fileName
 
 
 class CachedComponentCollection (object):
@@ -87,112 +97,238 @@ class CachedComponentCollection (object):
 	plugin package.
 
 	@type moduleName: C{str}
-	@ivar moduleName: The fully qualified name of the plugin module this
-		represents.
+	@ivar moduleName: The fully qualified name of the module this represents.
+
+	@type collectionName: C{str}
+	@ivar collectionName: The name of the component collection.
+
+	@type icon: C{str} or C{NoneType}
+	@ivar icon: A icon for the component collection.
 
 	@type description: C{str} or C{NoneType}
-	@ivar description: A brief explanation of this collection of components
-		(probably the plugin module's docstring).
+	@ivar description: A brief explanation of this component collection.
 
 	@type components: C{list}
 	@ivar components: The L{CachedComponent} instances which were loaded from this
 		dropin.
 	"""
-	def __init__ (self, moduleName, description):
+	def __init__ (self, moduleName, collectionName, icon, description):
 		self.moduleName = moduleName
+		self.collectionName = collectionName
+		self.icon = icon
 		self.description = description
 		self.components = []
 
 
 def _generateCacheEntry (provider):
+	try:
+		collectionName = provider.name
+	except AttributeError:
+		collectionName = provider.__name__
+
+	try:
+		description = provider.description
+	except AttributeError:
+		description = provider.__doc__
+
+	try:
+		icon = provider.icon
+	except AttributeError:
+		icon = None
+
+	try:
+		components = provider.__components__
+	except AttributeError:
+		components = {}
+
+	d = defer.Deferred()
 	dropin = CachedComponentCollection(
 		provider.__name__,
-		provider.__doc__
+		collectionName,
+		icon,
+		description
 	)
 
-	for k, v in provider.__dict__.iteritems():
-		if k[0] != "_" and IComponent.implementedBy(v):
-			if v.__module__ != provider.__name__:
-				# Ignore imported classes
-				continue
+	moduleDir = os.path.dirname(provider.__file__)
+
+	def processComponent (componentName, v):
+		if collectionName is not None:
+			componentName = "{:s}/{:s}".format(collectionName, componentName)
+
+		# It's a class
+		if IComponent.implementedBy(v):
+			fileName = namedModule(v.__module__).__file__
+			objectName = "{:s}.{:s}".format(v.__module__, v.__name__)
+			component = v()
+
+		# It's a function (eg getComponent)
+		elif callable(v):
+			fileName = namedModule(v.__module__).__file__
+			objectName = "{:s}.{:s}".format(v.__module__, v.__name__)
+			component = v()
+
+			if not IComponent.providedBy(component):
+				raise Error(
+					"{:s}.{:s}() does not produce a valid Component".format(
+						v.__module__,
+						v.__name__
+				))
+
+		# It's a string - hopefully a '.fbp' or '.json'
+		else:
+			import graph
+			fileName = os.path.join(moduleDir, str(v))
+			objectName = None
+			component = graph.loadFile(fileName)
+
+			if not IComponent.providedBy(component):
+				raise Error(
+					"{:s} does not produce a valid Component".format(
+						componentName
+				))
+
+		# Make sure we will check the ".py" file
+		if fileName[-4:] == ".pyc":
+			fileName = fileName[:-1]
+
+		if component.ready:
+			return defer.succeed((fileName, objectName, componentName, component))
+		else:
+			d = defer.Deferred()
+			component.once("ready", lambda data: d.callback(
+				(fileName, objectName, componentName, component)
+			))
+			return d
+
+	def collectDetails (components):
+		for fileName, objectName, componentName, component in components:
+			details = {
+				"description": component.description,
+				"icon": component.icon,
+				"subgraph": component.subgraph,
+				"inPorts": [],
+				"outPorts": []
+			}
+
+			for portName, port in component.inPorts.iteritems():
+				inPort = {
+					"id": portName,
+					"type": port.datatype,
+					"required": port.required,
+					"addressable": port.addressable,
+					"description": port.description
+				}
+
+				if "values" in port.options and port.options["values"] is not None:
+					inPort["values"] = port.options["values"]
+
+				if "default" in port.options and port.options["default"] is not None:
+					inPort["default"] = port.options["default"]
+
+				details["inPorts"].append(inPort)
+
+			for portName, port in component.outPorts.iteritems():
+				details["outPorts"].append({
+					"id": portName,
+					"type": port.datatype,
+					"required": port.required,
+					"addressable": port.addressable,
+					"description": port.description
+				})
 
 			# Instantiated for its side-effects.
-			CachedComponent(dropin, k, v.description)
+			CachedComponent(dropin, fileName, objectName, componentName, details)
 
-	return dropin
+		d.callback(dropin)
+
+	try:
+		results = [processComponent(k, v) for k, v in components.iteritems()]
+	except:
+		return defer.fail(failure.Failure())
+
+	defer.gatherResults(results).addCallbacks(collectDetails, d.errback)
+
+	return d
 
 
 def getCache ():
-	"""
-	Compute all the possible loadable plugins, while loading as few as
-	possible and hitting the filesystem as little as possible.
+	results = []
 
-	@return: A dictionary mapping component names to IComponent classes.
-	"""
-	allCachesCombined = {}
-	mod = getModule(__name__)
-	# don't want to walk deep, only immediate children.
-	buckets = {}
-	# Fill buckets with modules by related entry on the given package's
-	# __path__.  There's an abstraction inversion going on here, because this
-	# information is already represented internally in twisted.python.modules,
-	# but it's simple enough that I'm willing to live with it.  If anyone else
-	# wants to fix up this iteration so that it's one path segment at a time,
-	# be my guest.  --glyph
-	for plugmod in mod.iterModules():
-		fpp = plugmod.filePath.parent()
-		if fpp not in buckets:
-			buckets[fpp] = []
-		bucket = buckets[fpp]
-		bucket.append(plugmod)
-	for pseudoPackagePath, bucket in buckets.iteritems():
-		dropinPath = pseudoPackagePath.child('component.cache')
+	for moduleObj in getSearchDirectories():
+
+		componentPath = moduleObj.filePath
+		dropinPath = componentPath.parent().child('components.cache')
+
+		try:
+			lastModified = componentPath.getModificationTime()
+		except:
+			log.err("Could not stat {:s}".format(str(componentPath)))
+			continue
+
+		# Look for cache
 		try:
 			lastCached = dropinPath.getModificationTime()
-			dropinDotCache = pickle.load(dropinPath.open('r'))
+			collection = pickle.load(dropinPath.open('r'))
 		except:
-			dropinDotCache = {}
 			lastCached = 0
 
-		needsWrite = False
-		existingKeys = {}
 		
-		for pluginModule in bucket:
-			pluginKey = pluginModule.name.split('.')[-1]
-			existingKeys[pluginKey] = True
-			if ((pluginKey not in dropinDotCache) or
-				(pluginModule.filePath.getModificationTime() >= lastCached)):
-				needsWrite = True
-				try:
-					provider = pluginModule.load()
-				except:
-					# dropinDotCache.pop(pluginKey, None)
-					log.err()
-				else:
-					entry = _generateCacheEntry(provider)
-					dropinDotCache[pluginKey] = entry
-		# Make sure that the cache doesn't contain any stale plugins.
-		for pluginKey in dropinDotCache.keys():
-			if pluginKey not in existingKeys:
-				del dropinDotCache[pluginKey]
-				needsWrite = True
-		if needsWrite:
+		if lastCached < lastModified:
+			stale = True
+		else:
+			stale = False
+			for component in collection.components:
+				if FilePath(component.fileName).getModificationTime() > lastCached:
+					stale = True
+
+		if stale:
 			try:
-				dropinPath.setContent(pickle.dumps(dropinDotCache))
-			except OSError, e:
-				log.msg(
-					format=(
-						"Unable to write to component cache %(path)s: error "
-						"number %(errno)d"),
-					path=dropinPath.path, errno=e.errno)
+				module = moduleObj.load()
+
+				if type(module.__components__) is dict:
+					def loaded (collection):
+						try:
+							dropinPath.setContent(pickle.dumps(collection))
+						except OSError as e:
+							log.err("Unable to write cache file {:s}".format(dropinPath))
+
+						return collection
+
+					results.append(_generateCacheEntry(module).addCallback(loaded))
+			except KeyError as e:
+				log.err("Component module {:s} failed to load".format(componentPath))
 			except:
-				log.err(None, "Unexpected error while writing cache file")
-		allCachesCombined.update(dropinDotCache)
-	return allCachesCombined
+				log.err()
+		else:
+			results.append(defer.succeed(collection))
+
+	d = defer.Deferred()
+	defer.gatherResults(results).addCallbacks(d.callback, d.errback)
+	return d
+
 
 def components ():
-	cache = getCache()
+	def complete (cache):
+		return [
+			component
+			for collection in cache
+			for component in collection.components
+		]
 
-	for collection in cache.itervalues():
-		for components in collection.components:
-			yield component
+	return getCache().addCallback(complete)
+
+
+def getSearchDirectories ():
+	"""
+	Return a list of additional directories which should be searched for
+	modules to be included as part of the named plugin package.
+
+	@rtype: C{list} of C{str}
+	@return: A list of modules whose names start with "protoflo"
+	"""
+
+	return (m for m in modules.theSystemPath.iterModules() if m.name[:8] == "protoflo")
+
+
+class Error (Exception):
+	pass

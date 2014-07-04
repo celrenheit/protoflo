@@ -178,6 +178,12 @@ class Network (EventEmitter):
 			except IndexError:
 				processing = False
 
+		def handler (event, key, op):
+			def subscribeGraphHandler (data):
+				registerOp(op, data[key])
+
+			return subscribeGraphHandler
+
 		for event, key, op in (
 			("addNode", "node", self.processes.add), 
 			("removeNode", "node", self.processes.remove),
@@ -186,7 +192,7 @@ class Network (EventEmitter):
 			("addInitial", "edge", self.connections.addInitial),
 			("removeInitial", "edge", self.connections.removeInitial),
 		):
-			self.graph.on(event, lambda data: registerOp(op, data[key]))
+			self.graph.on(event, handler(event, key, op))
 
 		@self.graph.on("renameNode")
 		def subscribeGraphHandler (data):

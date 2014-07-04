@@ -29,9 +29,8 @@ class ComponentProtocol (object):
 
 	def listComponents (self, payload, context):
 		def componentsLoaded (components):
-			for component in components:
-				print "Processing %s" % component
-				self.processComponent(loader, component, context)
+			for component in components.itervalues():
+				self.sendComponent(component, context)
 
 		def error (failure):
 			self.send('error', failure.value, context)
@@ -46,59 +45,14 @@ class ComponentProtocol (object):
 	def setSource (self, payload, context):
 		self.send('error', Error("Not Implemented"), context)
 
-	def processComponent (self, loader, component, context):
-		def componentLoaded (instance):
-			# Ensure graphs are not run automatically when just querying their ports
-			if not instance.ready:
-				@instance.once('ready')
-				def processComponent_instanceReady (data):
-					self.sendComponent(component, instance, context)
-
-			else:
-				self.sendComponent(component, instance, context)
-
-		def error (failure):
-			self.send('error', failure.value, context)
-
-		loader.load(component, delayed = True).addCallbacks(componentLoaded, error)
-
-	def sendComponent (self, component, instance, context):
-		inPorts = []
-		outPorts = []
-
-		for portName, port in instance.inPorts.iteritems():
-			inPort = {
-				"id": portName,
-				"type": port.datatype,
-				"required": port.required,
-				"addressable": port.addressable,
-				"description": port.description
-			}
-
-			if "values" in port.options and port.options["values"] is not None:
-				inPort["values"] = port.options["values"]
-
-			if "default" in port.options and port.options["default"] is not None:
-				inPort["default"] = port.options["default"]
-			
-			inPorts.append(inPort)
-
-		for portName, port in instance.outPorts.iteritems():
-			outPorts.append({
-				"id": portName,
-				"type": port.datatype,
-				"required": port.required,
-				"addressable": port.addressable,
-				"description": port.description
-			})
-
+	def sendComponent (self, component, context):
 		self.send('component', {
-			"name": component,
-			"description": instance.description,
-			"subgraph": instance.subgraph,
-			"icon": instance.icon,
-			"inPorts": inPorts,
-			"outPorts": outPorts
+			"name": component.componentName,
+			"description": component.details['description'],
+			"subgraph": component.details['subgraph'],
+			"icon": component.details['icon'],
+			"inPorts": component.details['inPorts'],
+			"outPorts": component.details['outPorts']
 		}, context)
 
 	def registerGraph (self, id, graph, context):

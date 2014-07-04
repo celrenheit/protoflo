@@ -3,6 +3,7 @@ from twisted.internet import defer
 from util import EventEmitter
 
 import copy
+import os
 
 
 class Graph (EventEmitter):
@@ -753,3 +754,153 @@ class Initials (EventEmitter):
 			if edge["tgt"]["node"] == oldNodeKey:
 				edge["tgt"]["node"] = newNodeKey
 
+
+def loadJSON (definition, metadata = None):
+	"""Load a graph from a JSON-style dict
+
+	@type definition: C{dict}
+	@param definition: Graph definition.
+
+	@type metadata: C{dict} or C{NoneType}
+	@param metadata: metadata to pass to startTransaction.
+	"""
+
+	if "properties" not in definition:
+		definition['properties'] = {}
+
+	if "processes" not in definition:
+		definition['processes'] = {}
+
+	if "connections" not in definition:
+		definition['connections'] = []
+
+	try:
+		graph = Graph(definition['properties']['name'])
+	except KeyError:
+		graph = Graph()
+
+	graph.startTransaction('loadJSON', metadata)
+
+	# Set Graph Properties
+	properties = {}
+	for property, value in definition['properties'].iteritems():
+		if property is not 'name':
+			properties[property] = value
+
+	graph.setProperties(properties)
+
+	# Add Nodes
+	for id, process in definition['processes'].iteritems():
+		graph.nodes.add(
+			id,
+			process['component'],
+			process['metadata'] if "metadata" in process else {}
+		)
+
+	# Add Connections
+	for conn in definition['connections']:
+		metadata = conn['metadata'] if "metadata" in conn else {}
+
+		if "data" in conn:
+			if "index" in conn['tgt'] and conn['tgt']['index'] is not None:
+				index = int(conn['tgt']['index'])
+			else:
+				index = None
+
+			graph.initials.addIndex(
+				conn['data'],
+				conn['tgt']['process'],
+				conn['tgt']['port'].lower(),
+				index,
+				metadata
+			)
+
+			continue
+
+		if "index" in conn['tgt'] and conn['tgt']['index'] is not None:
+			tgtIndex = int(conn['tgt']['index'])
+		else:
+			tgtIndex = None
+
+		if "index" in conn['src'] and conn['src']['index'] is not None:
+			srcIndex = int(conn['tgt']['index'])
+		else:
+			srcIndex = None
+
+		graph.edges.addIndex(
+			conn['src']['process'],
+			conn['src']['port'].lower(),
+			srcIndex,
+			conn['tgt']['process'],
+			conn['tgt']['port'].lower(),
+			tgtIndex,
+			metadata
+		)
+
+	# Add exports
+	if "exports" in definition:
+		for exported in definition['exports']:
+			if "private" in exported:
+				# Translate legacy ports to new
+				split = exported['private'].split('.')
+
+				if split.length != 2:
+					continue
+
+				processId, portId = split
+
+				# Get properly cased process id
+				for id in definition['processes']:
+					if id.lower() == processId.lower():
+						processId = id
+			else:
+				processId = exported['process']
+				portId = exported['port']
+
+			metadata = exported['metadata'] if "metadata" in exported else {}
+
+			graph.addExport(exported['public'], processId, portId, metadata)
+
+	if "inports" in definition:
+		for pub, priv in definition['inports'].iteritems():
+			metadata = priv['metadata'] if "metadata" in priv else {}
+			graph.addInport(pub, priv['process'], priv['port'], metadata)
+
+	if "outports" in definition:
+		for pub, priv in definition['outports'].iteritems():
+			metadata = priv['metadata'] if "metadata" in priv else {}
+			graph.addOutport(pub, priv['process'], priv['port'], metadata)
+
+	if "groups" in definition:
+		for group in definition['groups']:
+			metadata = group['metadata'] if "metadata" in group else {}
+			graph.addGroup(group['name'], group['nodes'], metadata)
+
+	graph.endTransaction('loadJSON')
+
+	return graph
+
+
+def loadFile (fileName, metadata = None):
+	"""Load a graph from a file
+
+	Currently accepts .json and .fbp files.
+	N.B. Blocking function.
+
+	@type fileName: C{str}
+	@param fileName: Full file name of the file to load
+
+	@type metadata: C{dict} or C{NoneType}
+	@param metadata: metadata to pass to loadJSON
+	"""
+
+	ext = os.path.splitext(os.path.basename(fileName))[1]
+	if ext == ".fbp":
+		return loadJSON(
+			json.loads(subprocess.check_output(["fbp", fileName])),
+			metadata
+		)
+	elif ext == ".json":
+		return loadJSON(json.load(fileName), metadata)
+	else:
+		raise Error("Unsupported file type for {:s}".format(fileName))

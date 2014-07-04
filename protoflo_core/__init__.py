@@ -1,5 +1,9 @@
-from ..component import Component
-from ..port import InPorts, OutPorts
+from protoflo.component import Component
+from protoflo.port import InPorts, OutPorts
+
+name = "core"
+description = "Protoflo Core Components"
+
 
 class Kick (Component):
 
@@ -77,6 +81,7 @@ class Drop (Component):
 		})
 		self.outPorts = OutPorts()
 
+
 class Output (Component):
 
 	description = """This component receives input on a single inport, and
@@ -111,3 +116,10 @@ class Output (Component):
 
 	def log (self, data):
 		print data
+
+
+__components__ = {
+	'Kick': Kick,
+	'Drop': Drop,
+	'Output': Output
+}

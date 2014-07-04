@@ -1,4 +1,6 @@
 *~
 *.pyc
+.settings
+child.log
 node_modules
-component.cache
+components.cache

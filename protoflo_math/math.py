@@ -1,5 +1,5 @@
-from ..component import Component
-from ..port import InPorts, OutPorts
+from protoflo.component import Component
+from protoflo.port import InPorts, OutPorts
 
 class _MathComponent (Component):
 	def initialize (self, primary, secondary, res, inputType = 'number'):

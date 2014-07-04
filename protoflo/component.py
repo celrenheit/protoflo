@@ -93,9 +93,9 @@ class ComponentLoader (EventEmitter):
 		def complete (cache):
 			self.components = {}
 
-			for name, collection in cache.iteritems():
+			for collection in cache:
 				for component in collection.components:
-					self.components[component.fullName] = component
+					self.components[component.componentName] = component
 
 			d.callback(self.components)
 			
@@ -104,7 +104,8 @@ class ComponentLoader (EventEmitter):
 			self.emit("ready")
 
 		from components import getCache
-		threads.deferToThread(getCache).addCallback(complete)
+		getCache().addCallback(complete)
+		#threads.deferToThread(getCache).addCallback(complete)
 
 		return d
 
@@ -129,7 +130,7 @@ class ComponentLoader (EventEmitter):
 			else:
 				return defer.fail(Error("Component {:s} not available".format(name)))
 
-		# TODO: deal with graphs.
+		# TODO: deal with graphs / getComponent function / string values
 		componentClass = component.load()
 		componentObject = componentClass(metadata = metadata)
 		self.setIcon(name, componentObject)

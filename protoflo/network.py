@@ -6,6 +6,7 @@ from component import ComponentLoader
 
 from collections import deque
 from datetime import datetime
+import functools
 
 class Network (EventEmitter):
 	@classmethod
@@ -143,7 +144,8 @@ class Network (EventEmitter):
 
 			self.emit(event, **data)
 
-		socket.on("all", socketevent)
+		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
+			socket.on(event, functools.partial(socketevent, event))
 
 	def subscribeGraph (self):
 		# A NoFlo graph may change after network initialization.
@@ -324,7 +326,6 @@ class Processes (EventEmitter):
 		if not hasattr(node.component, "network"):
 			return
 
-		@node.component.network.on("all")
 		def subscribeSubgraphHandler (event, data = None):
 			if event == "connect":
 				self.network.increaseConnections()
@@ -342,6 +343,12 @@ class Processes (EventEmitter):
 				data["subgraph"] = [node.id]
 
 			self.emit(event, **data)
+
+		for event in ('connect', 'begingroup', 'data', 'endgroup', 'disconnect'):
+			node.component.network.on(
+				event, 
+				functools.partial(subscribeSubgraphHandler, event)
+			)
 
 	def subscribeNode (self, node):
 		if not hasattr(node.component, "icon"):

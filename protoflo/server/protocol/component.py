@@ -65,17 +65,17 @@ class ComponentProtocol (object):
 		loader = self.getLoader() # graph.baseDir
 		loader.listComponents().addCallback(register)
 
+		def registerGraph_handle (_):
+			self.processComponent(loader, id, context)
+
 		# Send graph info again every time it changes so we get the updated ports
-		events = (
+		for event in (
 			'addNode', 'removeNode', 'renameNode', 'addEdge', 'removeEdge',
 			'addInitial', 'removeInitial', 'addInport', 'removeInport', 
 			'renameInport','addOutport', 'removeOutport', 'renameOutport'
-		)
+		):
+			graph.on(event, registerGraph_handle)
 
-		@graph.on("all")
-		def registerGraph_handle (event, data):
-			if event in events:
-				self.processComponent(loader, id, context)
 
 class Error (Exception):
 	pass

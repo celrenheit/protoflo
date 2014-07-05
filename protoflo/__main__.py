@@ -48,8 +48,8 @@ if __name__ == "__main__":
 	parser_runtime.add_argument('--ip', type=str, help='WebSocket IP for runtime', default='localhost')
 	parser_runtime.add_argument('--port', type=int, help='WebSocket port for runtime', default=3569)
 
-	#parser_run = subparsers.add_parser('run', help='Run a graph non-interactively')
-	#parser_run.add_argument('--file', type=str, help='Graph file .fbp|.json', required=True)
+	parser_run = subparsers.add_parser('run', help='Run a graph non-interactively')
+	parser_run.add_argument('--file', type=str, help='Graph file .fbp|.json', required=True)
 
 	args = parser.parse_args(sys.argv[1:])
 	if args.command == 'register':
@@ -59,7 +59,14 @@ if __name__ == "__main__":
 		from protoflo.server.server import runtime
 		runtime(args.ip, args.port)
 
-	#elif args.command == 'run':
-	#    net = Network(load_file(args.file))
-	#    net.start()
-	#    net.run_iteration()
+	elif args.command == 'run':
+		from twisted.internet import reactor
+		import graph, network
+
+		def onRunning (net):
+			@net.on("end")
+			def stop (data):
+				reactor.stop()
+
+		network.Network.create(graph.loadFile(args.file)).addCallback(onRunning)
+		reactor.run()

@@ -8,17 +8,18 @@
     "exports": [],
     "groups": [],
     "processes": {
-        "invert1": {
-            "component": "Invert",
+		"bool": { "component": "python/Boolean" },
+		"invert1": {
+            "component": "python/Invert",
             "metadata": {
                 "x": 1174,
                 "y": 48,
                 "label": "invert1"
             }
         },
-        "invert2": { "component": "Invert" },
-        "stringify": { "component": "Str" },
-        "output": { "component": "WriteStdOut" }
+        "invert2": { "component": "python/Invert" },
+        "stringify": { "component": "python/Str" },
+        "output": { "component": "core/Output" }
     },
     "connections": [
         {
@@ -40,9 +41,13 @@
             "tgt": { "process": "output", "port": "in" }
         },
         {
+            "src": { "process": "bool", "port": "out" },
+            "tgt": { "process": "invert1", "port": "in" }
+        },
+        {
             "data": false,
             "tgt": {
-                "process": "invert1",
+                "process": "bool",
                 "port": "in"
             }
         }

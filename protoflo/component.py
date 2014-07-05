@@ -45,7 +45,10 @@ class Component (EventEmitter):
 		self._icon = icon or self.icon
 
 		def getIcon (self):
-			return self._icon
+			try:
+				return self._icon
+			except:
+				return None
 
 		def setIcon (self, icon):
 			self._icon = icon

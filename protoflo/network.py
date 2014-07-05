@@ -31,7 +31,7 @@ class Network (EventEmitter):
 				return d.callback(network)
 
 			# Wire the network up and start execution
-			network.connect.addCallbacks(networkReady, d.errback)
+			network.connect().addCallbacks(networkReady, d.errback)
 
 		# Ensure components are loaded before continuing
 		network.loader.listComponents().addCallbacks(componentsLoaded, d.errback)

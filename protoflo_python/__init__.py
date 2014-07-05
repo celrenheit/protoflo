@@ -50,7 +50,23 @@ def Boolean (metadata = None):
 	})
 	
 	def process (data, groups, outPort):
-		outPort.send(bool(data['data']))
+		d = data['data']
+
+		if type(d) in (str, unicode) and d.lower() == "false":
+			outPort.send(False)
+		else:
+			outPort.send(bool(d))
+
+	return MapComponent(c, process)
+
+
+def Invert (metadata = None):
+	c = CastComponent(outPorts = {
+		'out': { "datatype": "boolean", "required": False }
+	})
+
+	def process (data, groups, outPort):
+		outPort.send(not data['data'])
 
 	return MapComponent(c, process)
 
@@ -59,5 +75,6 @@ __components__ = {
 	'Str': Str,
 	'Int': Int,
 	'Float': Float,
-	'Boolean': Boolean
+	'Boolean': Boolean,
+	'Invert': Invert,
 }

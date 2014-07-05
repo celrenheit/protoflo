@@ -884,7 +884,7 @@ def loadJSON (definition, metadata = None):
 	return graph
 
 
-def loadFile (fileName, metadata = None):
+def loadFile (filename, metadata = None):
 	"""Load a graph from a file
 
 	Currently accepts .json and .fbp files.
@@ -897,13 +897,17 @@ def loadFile (fileName, metadata = None):
 	@param metadata: metadata to pass to loadJSON
 	"""
 
-	ext = os.path.splitext(os.path.basename(fileName))[1]
+	ext = os.path.splitext(os.path.basename(filename))[1]
 	if ext == ".fbp":
+		from json import loads
+		from subprocess import check_output
 		return loadJSON(
-			json.loads(subprocess.check_output(["fbp", fileName])),
+			loads(check_output(["fbp", filename])),
 			metadata
 		)
 	elif ext == ".json":
-		return loadJSON(json.load(fileName), metadata)
+		from json import load
+		with open(filename) as fp:
+			return loadJSON(load(fp), metadata)
 	else:
 		raise Error("Unsupported file type for {:s}".format(fileName))

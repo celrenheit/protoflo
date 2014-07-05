@@ -110,12 +110,12 @@ class Graph (EventEmitter):
 
 	def toJSON (self):
 		json = {
-			properties: {},
-			inports: {},
-			outports: {},
-			groups: [],
-			processes: {},
-			connections: []
+			"properties": {},
+			"inports": {},
+			"outports": {},
+			"groups": [],
+			"processes": {},
+			"connections": []
 		}
 
 		if self.name is not "":
@@ -173,7 +173,7 @@ class Graph (EventEmitter):
 
 		for initial in self.initials:
 			json["connections"].append({
-				"data": initial["tgt"]["data"],
+				"data": initial["src"]["data"],
 				"tgt": {
 					"process": initial["tgt"]["node"],
 					"port":    initial["tgt"]["port"],
@@ -209,6 +209,9 @@ class Exports (EventEmitter):
 
 	def __iter__ (self):
 		return self.ports.itervalues()
+
+	def iteritems (self):
+		return self.ports.iteritems()
 
 	def __len__ (self):
 		return len(self.ports)

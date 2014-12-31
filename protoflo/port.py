@@ -24,7 +24,7 @@ class Port (EventEmitter):
 	node = None
 	nodeInstance = None
 
-	def __init__ (self, datatype = "all", required = True, **options):
+	def __init__ (self, datatype = "all", required = False, **options):
 		if datatype == "integer":
 			datatype = "int"
 		elif datatype == "str":

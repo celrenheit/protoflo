@@ -15,7 +15,7 @@ def register (user_id, label, ip, port):
 	data = {
 		'type': 'protoflo', 
 		'protocol': 'websocket',
-		'address': "ws://" + ip + ":" + str(port), 
+		'address': ip + ":" + str(port), 
 		'id': runtime_id,
 		'label': label, 
 		'port': port, 

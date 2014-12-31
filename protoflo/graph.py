@@ -461,7 +461,6 @@ class Nodes (EventEmitter):
 
 		self.graph.checkTransactionEnd()
 
-	
 	def get (self, id):
 		"""Get a node
 		
@@ -485,7 +484,7 @@ class Nodes (EventEmitter):
 
 		self.graph.checkTransactionStart()
 
-		node.id = newId
+		node["id"] = newId
 
 		self.graph.edges.renameNode(oldId, newId)
 		self.graph.initials.renameNode(oldId, newId)

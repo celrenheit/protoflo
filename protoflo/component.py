@@ -139,8 +139,12 @@ class ComponentLoader (EventEmitter):
 		try:
 			component = self.components[name]
 		except KeyError:
+			# try a short-name lookup
 			for key in self.components.iterkeys():
-				if key.split('/')[1] == name:
+				parts = key.split('/')
+				# note: currently only the builtin Graph component within
+				# protoflo.__init__ has no collection name
+				if len(parts) == 2 and parts[1] == name:
 					component = self.components[key]
 					name = key
 					break

@@ -616,11 +616,12 @@ class Edges (EventEmitter):
 				else:
 					toKeep.append(edge)
 
-		self.edges = toKeep
-
+		# set the metadata before removing the edge so that the 'change' event is fired
 		for edge in toRemove:
 			self.setMetadata(edge["src"]["node"], edge["src"]["port"], edge["tgt"]["node"], edge["tgt"]["port"], {})
 			self.emit('remove', edge = edge)
+
+		self.edges = toKeep
 
 		self.graph.checkTransactionEnd()
 

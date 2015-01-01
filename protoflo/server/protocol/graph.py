@@ -22,8 +22,10 @@ class GraphProtocol (object):
 			if topic == 'addnode':         return self.addNode       (graph, payload, context)
 			elif topic == 'removenode':    return self.removeNode    (graph, payload, context)
 			elif topic == 'renamenode':    return self.renameNode    (graph, payload, context)
+			elif topic == 'changenode':    return self.changeNode    (graph, payload, context)
 			elif topic == 'addedge':       return self.addEdge       (graph, payload, context)
 			elif topic == 'removeedge':    return self.removeEdge    (graph, payload, context)
+			elif topic == 'changeedge':    return self.changeEdge    (graph, payload, context)
 			elif topic == 'addinitial':    return self.addInitial    (graph, payload, context)
 			elif topic == 'removeinitial': return self.removeInitial (graph, payload, context)
 			elif topic == 'addinport':     return self.addInport     (graph, payload, context)
@@ -93,6 +95,16 @@ class GraphProtocol (object):
 				"graph": id
 			}, context)
 
+		@graph.on('changeNode')
+		def subscribeGraphHandler_changeNode (data):
+			node = copy.deepcopy(data["node"])
+			node["graph"] = id
+			# the nodejs runtime does not provide 'component' to changenode,
+			# but does to removenode. we will immitate this for now.
+			# FIXME: resolve this with the noflojs team
+			comp = node.pop('component')
+			self.send('changenode', node, context)
+
 		@graph.on('addEdge')
 		def subscribeGraphHandler_addEdge (data):
 			edge = copy.deepcopy(data["edge"])
@@ -118,6 +130,19 @@ class GraphProtocol (object):
 				del edge["tgt"]["index"]
 
 			self.send('removeedge', edge, context)
+
+		@graph.on('changeEdge')
+		def subscribeGraphHandler_changeEdge (data):
+			edge = copy.deepcopy(data["edge"])
+			edge["graph"] = id
+
+			if edge["src"]["index"] is None:
+				del edge["src"]["index"]
+
+			if edge["tgt"]["index"] is None:
+				del edge["tgt"]["index"]
+
+			self.send('changeedge', edge, context)
 
 		@graph.on('addInitial')
 		def subscribeGraphHandler_addInitial (data):
@@ -148,6 +173,9 @@ class GraphProtocol (object):
 	def renameNode (self, graph, payload, context):
 		graph.nodes.rename(*args(payload, ["from", "to"], True, asList = True))
 
+	def changeNode (self, graph, payload, context):
+		graph.nodes.setMetadata(**args(payload, ["id", "metadata"], True))
+
 	def addEdge (self, graph, payload, context):
 		graph.edges.addIndex(*args(
 			payload, 
@@ -158,6 +186,14 @@ class GraphProtocol (object):
 
 	def removeEdge (self, graph, payload, context):
 		graph.edges.remove(*args(payload, ["src.node", "src.port", "tgt.node", "tgt.port"], 1, asList = True))
+
+	def changeEdge (self, graph, payload, context):
+		graph.edges.setMetadata(*args(
+			payload, 
+			["src.node", "src.port", "tgt.node", "tgt.port", "metadata"], 
+			True,
+			asList = True
+		))
 
 	def addInitial (self, graph, payload, context):
 		graph.initials.addIndex(**args(payload, ["src.data", "tgt.node", "tgt.port", "tgt.index", "metadata"], 3))

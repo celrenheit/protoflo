@@ -1,6 +1,15 @@
 from protoflo.component import Component
 from protoflo.port import InPorts, OutPorts
 
+def _toNumber(s):
+	"""Cast a string to an int or float"""
+	if not isinstance(s, basestring):
+		return s	
+	try:
+		return int(s)
+	except ValueError:
+		return float(s)
+
 class _MathComponent (Component):
 	def initialize (self, primary, secondary, res, inputType = 'number'):
 		self.inPorts = InPorts({
@@ -45,7 +54,7 @@ class _MathComponent (Component):
 		@primaryPort.on('data') 
 		def onData (data):
 			self.primary = {
-				"value": data['data'],
+				"value": _toNumber(data['data']),
 				"group": self.groups[:],
 				"disconnect": False
 			}
@@ -68,7 +77,7 @@ class _MathComponent (Component):
 
 		@secondaryPort.on('data') 
 		def onData (data):
-			self.secondary = data['data']
+			self.secondary = _toNumber(data['data'])
 			if self.primary['value'] is not None:
 				calculate()
 

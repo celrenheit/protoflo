@@ -70,6 +70,7 @@ class GraphProtocol (object):
 			self.transport.component.registerGraph(fullName, graph, context)
 
 		self.graphs[payload["id"]] = graph
+		self.send('clear', payload, context)
 
 	def subscribeGraph (self, id, graph, context):
 		@graph.on('addNode')

@@ -57,7 +57,7 @@ class NoFloUiProtocol (WebSocketServerProtocol):
 		self.factory.runtime.receive(
 			cmd['protocol'], 
 			cmd['command'], 
-			cmd["payload"], 
+			cmd.get("payload", {}), 
 			self
 		)
 

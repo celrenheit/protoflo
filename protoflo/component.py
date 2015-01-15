@@ -9,11 +9,16 @@ from components import IComponent
 import copy
 
 def _combine (base, new):
+	"""
+	base : tuple or None
+	new : tuple or None
+	"""
 	if base is None:
 		return new
 	if new is None:
 		return base
-	return copy.deepcopy(base).update(new)
+	return copy.deepcopy(base) + new
+
 
 class Component (EventEmitter):
 	implements(IComponent)

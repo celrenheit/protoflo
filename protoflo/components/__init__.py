@@ -255,31 +255,28 @@ def getCache ():
 	results = []
 
 	for moduleObj in getSearchDirectories():
-
 		componentPath = moduleObj.filePath
 		dropinPath = componentPath.parent().child('components.cache')
-
-		try:
-			lastModified = componentPath.getModificationTime()
-		except:
-			log.err("Could not stat {:s}".format(str(componentPath)))
-			continue
 
 		# Look for cache
 		try:
 			lastCached = dropinPath.getModificationTime()
 			collection = pickle.load(dropinPath.open('r'))
+		# FIXME: what kind of error do we expect?
 		except:
-			lastCached = 0
-
-		
-		if lastCached < lastModified:
 			stale = True
 		else:
 			stale = False
-			for component in collection.components:
-				if FilePath(component.fileName).getModificationTime() > lastCached:
-					stale = True
+			for path in componentPath.parent().walk():
+				if path.isfile() and path.splitext()[-1] == '.py':
+					try:
+						lastModified = path.getModificationTime()
+					except:
+						log.err("Could not stat {:s}".format(str(componentPath)))
+					else:
+						if lastModified > lastCached:
+							stale = True
+							break
 
 		if stale:
 			try:
@@ -295,7 +292,7 @@ def getCache ():
 						return collection
 
 					results.append(_generateCacheEntry(module).addCallback(loaded))
-			except KeyError as e:
+			except (KeyError, AttributeError) as e:
 				log.err("Component module {:s} failed to load".format(componentPath))
 			except:
 				log.err()

@@ -203,6 +203,7 @@ def _generateCacheEntry (provider):
 	def collectDetails (components):
 		for fileName, objectName, componentName, component in components:
 			details = {
+				# FIXME: unicode?
 				"description": str(component.description),
 				"icon": str(component.icon),
 				"subgraph": bool(component.subgraph),
@@ -212,6 +213,7 @@ def _generateCacheEntry (provider):
 
 			for portName, port in component.inPorts.iteritems():
 				inPort = {
+					# FIXME: unicode?
 					"id": str(portName),
 					"type": str(port.datatype),
 					"required": bool(port.required),
@@ -228,13 +230,17 @@ def _generateCacheEntry (provider):
 				details["inPorts"].append(inPort)
 
 			for portName, port in component.outPorts.iteritems():
-				details["outPorts"].append({
+				data = {
+					# FIXME: unicode?
 					"id": str(portName),
 					"type": str(port.datatype),
 					"required": bool(port.required),
 					"addressable": bool(port.addressable),
-					"description": str(port.description),
-				})
+				}
+				# don't send a description if it hasn't been provided
+				if port.description:
+					data["description"] = str(port.description)
+				details["outPorts"].append(data)
 
 			# Instantiated for its side-effects.
 			CachedComponent(dropin, fileName, objectName, componentName, details)

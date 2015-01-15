@@ -87,7 +87,7 @@ class Graph (Component):
 				if not checkComponent(name, process):
 					self._notReady += 1
 
-			if self._notReady is 0:
+			if not self._notReady:
 				reactor.callLater(0, setReady)
 
 			if "start" in self.inPorts and self.inPorts['start'].attached and not self.started:

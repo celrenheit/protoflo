@@ -118,7 +118,7 @@ class Graph (EventEmitter):
 			"connections": []
 		}
 
-		if self.name is not "":
+		if self.name != "":
 			json["properties"]["name"] = self.name
 
 		for property, value in self.properties.iteritems():
@@ -547,7 +547,7 @@ class Edges (EventEmitter):
 
 		# Don't add a duplicate edge
 		for edge in self.edges:
-			if edge["src"]["node"] is outNode and edge["src"]["port"] is outPort and edge["tgt"]["node"] is inNode and edge["tgt"]["port"] is inPort:
+			if edge["src"]["node"] == outNode and edge["src"]["port"] == outPort and edge["tgt"]["node"] == inNode and edge["tgt"]["port"] == inPort:
 				return
 
 		return self.addIndex(outNode, outPort, None, inNode, inPort, None, metadata)
@@ -634,8 +634,8 @@ class Edges (EventEmitter):
 		"""
 
 		for edge in self.edges:
-			if edge["src"]["node"] is node and edge["src"]["port"] is port:
-				if edge["tgt"]["node"] is node2 and edge["tgt"]["port"] is port2:
+			if edge["src"]["node"] == node and edge["src"]["port"] == port:
+				if edge["tgt"]["node"] == node2 and edge["tgt"]["port"] == port2:
 					return edge
 
 		return None
@@ -787,7 +787,7 @@ def loadJSON (definition, metadata = None):
 	# Set Graph Properties
 	properties = {}
 	for property, value in definition['properties'].iteritems():
-		if property is not 'name':
+		if property != 'name':
 			properties[property] = value
 
 	graph.setProperties(properties)

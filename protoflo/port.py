@@ -280,7 +280,7 @@ class OutPort (Port):
 			socket.disconnect()
 
 	def checkRequired (self, sockets):
-		if len(sockets) is 0 and self.required:
+		if not len(sockets) and self.required:
 			raise Exception("{:s}: No connections available".format(self.id))
 
 	def getSockets (self, socketId = None):

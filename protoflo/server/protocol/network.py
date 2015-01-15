@@ -45,6 +45,7 @@ class NetworkProtocol (object):
 		try:
 			graph = self.resolveGraph(payload, context)
 
+			# FIXME: add 'debug' command
 			if topic == 'start':
 				return self.initNetwork(graph, payload, context)
 			if topic == 'stop':

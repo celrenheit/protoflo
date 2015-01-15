@@ -56,6 +56,7 @@ class Graph (Component):
 		# Graph filename
 		else:
 			graph = str(graph)
+			# FIXME: this is not fully ported from javascript.  use os.abspath
 			if graph.substr[0] != "/" and graph.substr[1] != ":":
 				graph = os.path.join(os.getcwd(), graph)
 

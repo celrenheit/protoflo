@@ -201,6 +201,8 @@ def _generateCacheEntry (provider):
 			return d
 
 	def collectDetails (components):
+		# FIXME: need a more declarative and visual approach, encapsulating optional values, etc.
+		# see github.com/schematics/schematics
 		for fileName, objectName, componentName, component in components:
 			details = {
 				# FIXME: unicode?
@@ -212,6 +214,7 @@ def _generateCacheEntry (provider):
 			}
 
 			for portName, port in component.inPorts.iteritems():
+				# TODO: determine if description is optional for in-ports
 				inPort = {
 					# FIXME: unicode?
 					"id": str(portName),

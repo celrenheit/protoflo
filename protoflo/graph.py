@@ -29,6 +29,7 @@ class Graph (EventEmitter):
 
 			return event
 
+		# addNode, removeNode, changeNode, etc
 		self.nodes.on("all", _event("Node"))
 		self.edges.on("all", _event("Edge"))
 		self.initials.on("all", _event("Initial"))
@@ -43,6 +44,7 @@ class Graph (EventEmitter):
 		self.transaction["depth"] = 1
 		self.emit('startTransaction', transaction = id, metadata = metadata)
 
+	# TODO: convert these into context managers
 	def endTransaction (self, id, metadata = None):
 		if self.transaction["id"] is None:
 			raise Error("Attempted to end non-existing transaction")
@@ -186,6 +188,7 @@ class Graph (EventEmitter):
 	def save (self, file, success):
 		from json import dumps
 		json = dumps(self.toJSON(), indent = 4)
+		# FIXME: I think this should call .format(file)
 		with open("{:s}.json", 'r') as f:
 			f.write(json)
 
@@ -468,7 +471,8 @@ class Nodes (EventEmitter):
 		
 			myNode = myGraph.getNode 'Read'
 		"""
-
+		# FIXME: this could become slow for large graphs: could use a dict
+		# to store the id-to-node relationship
 		return next((node for node in self.nodes if node["id"] == id), None)
 
 	__getattr__ = get

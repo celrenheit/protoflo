@@ -20,7 +20,9 @@ class WebSocketRuntime (BaseTransport):
 	def send (self, protocol, topic, payload, context):
 		if isinstance(payload, Exception):
 			payload = {
-				"type": payload.__class__.__name__,
+				# FIXME: the error type could be nice to send along, but it
+				# causes the noflo unittests to fail.  talk with developers:
+				#"type": payload.__class__.__name__,
 				"message": payload.message
 			}
 

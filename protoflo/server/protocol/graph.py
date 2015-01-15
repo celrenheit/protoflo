@@ -19,6 +19,8 @@ class GraphProtocol (object):
 			graph = self.resolveGraph(payload)
 
 			# Run command
+			# FIXME: convert this to a dictionary
+			# FIMXE: add addgroup, removegroup, renamegroup, changegroup
 			if topic == 'addnode':         return self.addNode       (graph, payload, context)
 			elif topic == 'removenode':    return self.removeNode    (graph, payload, context)
 			elif topic == 'renamenode':    return self.renameNode    (graph, payload, context)
@@ -202,21 +204,29 @@ class GraphProtocol (object):
 		graph.initials.remove(**args(payload, ["tgt.node", "tgt.port"], 1))
 
 	def addInport (self, graph, payload, context):
+		# FIXME: adding a port to a graph is different than adding one to a component
+		# (because a port on a graph is just a public label for a port on a component
+		# within the graph) yet this code attempts to treat it the same.
 		graph.inports.add(**args(payload, ["public", "node", "port", "metadata"], 3))
 
 	def removeInport (self, graph, payload, context):
+		# FIXME: see addInport
 		graph.inports.remove(**args(payload, "public", True, 'Missing exported inport name'))
 
 	def renameInport (self, graph, payload, context):
+		# FIXME: see addInport
 		graph.inports.rename(**args(payload, ["from", "to"], True))
 
 	def addOutport (self, graph, payload, context):
+		# FIXME: see addInport
 		graph.outports.add(**args(payload, ["public", "node", "port", "metadata"], 3))
 
 	def removeOutport (self, graph, payload, context):
+		# FIXME: see addInport
 		graph.outports.remove(**args(payload, "public", True, 'Missing exported outport name'))
 
 	def renameOutport (self, graph, payload, context):
+		# FIXME: see addInport
 		graph.outports.rename(**args(payload, ["from", "to"], True))
 
 def args (payload, keys, required = None, errorMsg = None, asList = False):
@@ -224,11 +234,16 @@ def args (payload, keys, required = None, errorMsg = None, asList = False):
 	keys = list(keys)
 
 	if required in (None, False):
+		# no keys
 		required = []
 	elif required is True:
+		# all keys
 		required = keys
-	elif type(required) is not list:
+	elif isinstance(required, int):
+		# range of keys
 		required = keys[:required]
+	else:
+		assert isinstance(required, list)
 
 	def set (key, value):
 		if asList:

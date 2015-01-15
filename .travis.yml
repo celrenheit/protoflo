@@ -1,0 +1,13 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+# all travis instances run node, which we need for testings
+node_js:
+- '0.10'
+# install the test suite
+before_script: npm install -g fbp-protocol
+# install dependencies
+install: pip install -r requirements.txt
+# run tests
+script: fbp-test

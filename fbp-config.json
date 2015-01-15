@@ -1,0 +1,7 @@
+{
+  "name": "protoflo",
+  "command": "python -m protoflo runtime",
+  "host": "localhost",
+  "port": 3569,
+  "collection": "core"
+}

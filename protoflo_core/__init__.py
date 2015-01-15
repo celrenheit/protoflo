@@ -118,8 +118,39 @@ class Output (Component):
 		print data
 
 
+class Repeat (Component):
+
+	description = """This component receives input on a single inport, and
+		passes the data to its outport unchanged"""
+	icon = 'bug'
+
+	def initialize (self, **options):
+		self.inPorts = InPorts({
+			"in": {
+				"datatype": 'all',
+				"description": 'Packet to be passed on'
+			}
+		})
+		self.outPorts = OutPorts({
+			"out": { "datatype": 'all' }
+		})
+
+		inPort = self.inPorts["in"]
+		outPort = self.outPorts["out"]
+
+		@inPort.on('data')
+		def onData (data):
+			if outPort.attached:
+				outPort.send(data["data"])
+
+		@inPort.on('disconnect')
+		def onDisconnect (data):
+			if outPort.attached:
+				outPort.disconnect()
+
 __components__ = {
 	'Kick': Kick,
 	'Drop': Drop,
-	'Output': Output
+	'Output': Output,
+	'Repeat': Repeat
 }

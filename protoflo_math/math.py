@@ -12,14 +12,13 @@ def _toNumber(s):
 
 class _MathComponent (Component):
 	def initialize (self, primary, secondary, res, inputType = 'number'):
-		self.inPorts = InPorts({
-			primary:	 { 'datatype': inputType },
-			secondary: { 'datatype': inputType },
-			"clear":	 { 'datatype': 'bang' }
-		})
-		self.outPorts = OutPorts({
-			res: { 'datatype': inputType }
-		})
+		self.inPorts = InPorts()
+		self.inPorts[primary] =	{ 'datatype': inputType }
+		self.inPorts[secondary] = { 'datatype': inputType }
+		self.inPorts["clear"] = { 'datatype': 'bang' }
+
+		self.outPorts = OutPorts()
+		self.outPorts[res] = { 'datatype': inputType }
 
 		primaryPort = self.inPorts[primary]
 		secondaryPort = self.inPorts[secondary]

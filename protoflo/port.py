@@ -1,6 +1,7 @@
 from twisted.internet import reactor, defer
 
 import functools
+from collections import OrderedDict
 
 from util import EventEmitter
 
@@ -301,14 +302,15 @@ class OutPort (Port):
 		return "caching" in self.options and self.options["caching"]
 
 
+# FIXME: consider making this multiply inherit OrderedDict and EventEmitter
 class Ports (EventEmitter):
 	model = None
 
 	def __init__ (self, ports = None):
-		self.ports = {}
+		self.ports = OrderedDict()
 
 		if ports is not None:
-			for name, options in ports.iteritems():
+			for name, options in ports:
 				self.add(name, options)
 
 	def __iter__ (self):
@@ -327,6 +329,9 @@ class Ports (EventEmitter):
 
 	def __contains__ (self, name):
 		return name in self.ports
+
+	def __setitem__(self, name, options):
+		self.add(name, options)
 
 	def add (self, name, options, process = None):
 		if name in ("add", "remove"):

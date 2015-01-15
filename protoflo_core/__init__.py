@@ -21,20 +21,18 @@ class Kick (Component):
 
 		self.groups = []
 
-		self.inPorts = InPorts({
-			"in": { 
-				"datatype": "bang",
-				"description": "Signal to send the data packet"
-			},
-			"data": {
-				"datatype": "all",
-				"description": "Packet to be sent"
-			}
-		})
+		self.inPorts = InPorts()
+		self.inPorts["in"] = {
+			"datatype": "bang",
+			"description": "Signal to send the data packet"
+		}
+		self.inPorts["data"] = {
+			"datatype": "all",
+			"description": "Packet to be sent"
+		}
 
-		self.outPorts = OutPorts({
-			"out": { "datatype": "all" }
-		})
+		self.outPorts = OutPorts()
+		self.outPorts["out"] = { "datatype": "all" }
 
 		self.inPorts["in"].on("begingroup", lambda data: self.groups.append(data["group"]))
 		self.inPorts["in"].on("endgroup", lambda data: self.groups.pop())
@@ -73,12 +71,11 @@ class Drop (Component):
 	icon = 'trash-o'
 
 	def initialize (self, **options):
-		self.inPorts = InPorts({
-			"in": {
-				"datatype": 'all',
-				"description": 'Packet to be dropped'
-			}
-		})
+		self.inPorts = InPorts()
+		self.inPorts["in"] = {
+			"datatype": 'all',
+			"description": 'Packet to be dropped'
+		}
 		self.outPorts = OutPorts()
 
 
@@ -89,15 +86,18 @@ class Output (Component):
 	icon = 'bug'
 
 	def initialize (self, **options):
-		self.inPorts = InPorts({
-			"in": {
-				"datatype": 'all',
-				"description": 'Packet to be printed through console.log'
-			}
-		})
-		self.outPorts = OutPorts({
-			"out": { "datatype": 'all' }
-		})
+		self.inPorts = InPorts()
+		self.inPorts["in"] = {
+			"datatype": 'all',
+			"description": 'Packet to be printed through console.log',
+		}
+		# not used yet. exist for unittests
+		self.inPorts["options"] = {
+			"datatype": 'object',
+			"description": 'Options to be passed to console.log',
+		}
+		self.outPorts = OutPorts()
+		self.outPorts["out"] = { "datatype": 'all' }
 
 		inPort = self.inPorts["in"]
 		outPort = self.outPorts["out"]
@@ -125,15 +125,13 @@ class Repeat (Component):
 	icon = 'bug'
 
 	def initialize (self, **options):
-		self.inPorts = InPorts({
-			"in": {
-				"datatype": 'all',
-				"description": 'Packet to be passed on'
-			}
-		})
-		self.outPorts = OutPorts({
-			"out": { "datatype": 'all' }
-		})
+		self.inPorts = InPorts()
+		self.inPorts["in"] = {
+			"datatype": 'all',
+			"description": 'Packet to be passed on'
+		}
+		self.outPorts = OutPorts()
+		self.outPorts["out"] = { "datatype": 'all' }
 
 		inPort = self.inPorts["in"]
 		outPort = self.outPorts["out"]

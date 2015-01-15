@@ -16,19 +16,18 @@ class Graph (Component):
 		self.baseDir = None
 		self.loader = None
 
-		self.inPorts = InPorts({
-			"graph": {
-				"datatype": 'all',
-				"description": 'NoFlo graph definition to be used with the subgraph component',
-				"required": True,
-				"immediate": True
-			},
-			"start": {
-				"datatype": 'bang',
-				"description": 'if attached, the network will only be started when receiving a start message',
-				"required": False
-			}
-		})
+		self.inPorts = InPorts()
+		self.inPorts["graph"] = {
+			"datatype": 'all',
+			"description": 'NoFlo graph definition to be used with the subgraph component',
+			"required": True,
+			"immediate": True
+		}
+		self.inPorts["start"] = {
+			"datatype": 'bang',
+			"description": 'if attached, the network will only be started when receiving a start message',
+			"required": False
+		}
 
 		self.inPorts['graph'].on('data', lambda data: self.setGraph(data['data']))
 		self.inPorts['start'].on('data', lambda data: self.start())

@@ -6,15 +6,15 @@ name = "python"
 description = "Protoflo Python Components"
 
 class CastComponent (Component):
-	inPorts = {
-		'in': { "datatype": "all" }
-	}
+	inPorts = [
+		('in', { "datatype": "all" })
+	]
 
 
 def Str (metadata = None):
-	c = CastComponent(outPorts = {
-		'out': { "datatype": "string", "required": False }
-	})
+	c = CastComponent(outPorts = [
+		('out', { "datatype": "string", "required": False })
+	])
 	
 	def process (data, groups, outPort):
 		outPort.send(str(data['data']))
@@ -23,9 +23,9 @@ def Str (metadata = None):
 
 
 def Int (metadata = None):
-	c = CastComponent(outPorts = {
-		'out': { "datatype": "int", "required": False }
-	})
+	c = CastComponent(outPorts = [
+		('out', { "datatype": "int", "required": False })
+	])
 	
 	def process (data, groups, outPort):
 		outPort.send(int(data['data']))
@@ -34,9 +34,9 @@ def Int (metadata = None):
 
 
 def Float (metadata = None):
-	c = CastComponent(outPorts = {
-		'out': { "datatype": "number", "required": False }
-	})
+	c = CastComponent(outPorts = [
+		('out': { "datatype": "number", "required": False })
+	])
 	
 	def process (data, groups, outPort):
 		outPort.send(float(data['data']))
@@ -45,9 +45,9 @@ def Float (metadata = None):
 
 
 def Boolean (metadata = None):
-	c = CastComponent(outPorts = {
-		'out': { "datatype": "boolean", "required": False }
-	})
+	c = CastComponent(outPorts = [
+		('out', { "datatype": "boolean", "required": False })
+	])
 	
 	def process (data, groups, outPort):
 		d = data['data']
@@ -61,9 +61,9 @@ def Boolean (metadata = None):
 
 
 def Invert (metadata = None):
-	c = CastComponent(outPorts = {
-		'out': { "datatype": "boolean", "required": False }
-	})
+	c = CastComponent(outPorts = [
+		('out', { "datatype": "boolean", "required": False })
+	])
 
 	def process (data, groups, outPort):
 		outPort.send(not data['data'])

@@ -49,6 +49,8 @@ class NetworkProtocol (object):
 				return self.initNetwork(graph, payload, context)
 			if topic == 'stop':
 				return self.stopNetwork(graph, payload, context)
+			if topic == 'getstatus':
+				return self.getStatus(graph, payload, context)
 			if topic == 'edges':
 				return self.selectEdges(graph, payload, context)
 
@@ -93,9 +95,12 @@ class NetworkProtocol (object):
 	def subscribeNetwork (self, network, payload, context):
 		@network.on('start')
 		def subscribeNetwork_start (data):
+			network = self.networks[payload['graph']]
 			self.send('started', {
 				"time": data["start"].isoformat(),
-				"graph": payload["graph"]
+				"graph": payload["graph"],
+				'started': network.running,
+				"running": False  # FIXME:
 			}, context)
 
 		@network.on('icon')
@@ -118,10 +123,13 @@ class NetworkProtocol (object):
 
 		@network.on('end')
 		def subscribeNetwork_end (data):
+			network = self.networks[payload['graph']]
 			self.send('stopped', {
 				"time": data["end"].isoformat(),
 				"uptime": data["uptime"],
-				"graph": payload["graph"]
+				"graph": payload["graph"],
+				"started": network.running,
+				"running": False  # FIXME: 
 			}, context)
 
 	def stopNetwork (self, graph, payload, context):
@@ -129,6 +137,15 @@ class NetworkProtocol (object):
 			return
 
 		self.networks[payload["graph"]].stop()
+
+	def getStatus (self, graph, payload, context):
+		network = self.networks[payload['graph']]
+		data = {
+			'graph': payload['graph'],
+			'started': network.running,
+			'running': False, # FIXME: determine how to get this
+		}
+		self.send('status', data, context)
 
 	def selectEdges (self, graph, payload, context):
 		if payload["graph"] not in self.networks:

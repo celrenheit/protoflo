@@ -166,6 +166,48 @@ class GraphProtocol (object):
 
 			self.send('removeinitial', iip, context)
 
+		@graph.on('addInport')
+		@graph.on('addOutport')
+		@graph.on('removeInport')
+		@graph.on('removeOutport')
+		def subscribeGraphHandler_modifyPorts (data):
+			# FIXME: the design of the API, and lack of a proper Node object,
+			# makes this much hard than it should be
+			import sys
+			from ... import components
+
+			comps = components.components()
+			comps = dict((c.componentName, c.details) for c in comps.result)
+			print>>sys.stdout, "****", comps.keys()
+
+
+			def getPorts(portType):
+				results = []
+				src = graph.inports if portType == 'inPorts' else graph.outports
+				for public, port in src.iteritems():
+					node = graph.nodes.get(port['process'])
+					comp = comps[node['component']]
+					for p in comp[portType]:
+						if p['id'] == port['port']:
+							newPort = copy.deepcopy(p)
+							newPort.pop('description', None)
+							results.append(newPort)
+							break
+					else:
+						raise Error('could not find port {}'.format(port['port']))
+				return results
+
+			inPorts = getPorts('inPorts')
+			outPorts = getPorts('outPorts')
+
+			payload = {
+				"graph": id,
+				"inPorts": inPorts,
+				"outPorts": outPorts,
+			}
+
+			self.send('ports', payload, context)
+
 	def addNode (self, graph, payload, context):
 		graph.nodes.add(**kwargs(payload, ["id", "component"], ["metadata"]))
 

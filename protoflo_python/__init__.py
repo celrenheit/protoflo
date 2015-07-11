@@ -35,7 +35,7 @@ def Int (metadata = None):
 
 def Float (metadata = None):
 	c = CastComponent(outPorts = [
-		('out': { "datatype": "number", "required": False })
+		('out', { "datatype": "number", "required": False })
 	])
 	
 	def process (data, groups, outPort):

@@ -20,7 +20,7 @@ class GraphProtocol (object):
 
 			# Run command
 			# FIXME: convert this to a dictionary
-			# FIMXE: add addgroup, removegroup, renamegroup, changegroup
+			# FIXME: add addgroup, removegroup, renamegroup, changegroup
 			if topic == 'addnode':         return self.addNode       (graph, payload, context)
 			elif topic == 'removenode':    return self.removeNode    (graph, payload, context)
 			elif topic == 'renamenode':    return self.renameNode    (graph, payload, context)
@@ -167,106 +167,96 @@ class GraphProtocol (object):
 			self.send('removeinitial', iip, context)
 
 	def addNode (self, graph, payload, context):
-		graph.nodes.add(**args(payload, ["id", "component", "metadata"], 2))
+		graph.nodes.add(**kwargs(payload, ["id", "component"], ["metadata"]))
 
 	def removeNode (self, graph, payload, context):
-		graph.nodes.remove(**args(payload, ["id"], True))
+		graph.nodes.remove(**kwargs(payload, ["id"]))
 
 	def renameNode (self, graph, payload, context):
-		graph.nodes.rename(*args(payload, ["from", "to"], True, asList = True))
+		graph.nodes.rename(*args(payload, ["from", "to"]))
 
 	def changeNode (self, graph, payload, context):
-		graph.nodes.setMetadata(**args(payload, ["id", "metadata"], True))
+		graph.nodes.setMetadata(**kwargs(payload, ["id", "metadata"]))
 
 	def addEdge (self, graph, payload, context):
-		graph.edges.addIndex(*args(
+		graph.edges.addIndex(**kwargs(
 			payload, 
-			["src.node", "src.port", "src.index", "tgt.node", "tgt.port", "tgt.index", "metadata"], 
 			["src.node", "src.port", "tgt.node", "tgt.port"],
-			asList = True
+			["src.index", "tgt.index", "metadata"]
 		))
 
 	def removeEdge (self, graph, payload, context):
-		graph.edges.remove(*args(payload, ["src.node", "src.port", "tgt.node", "tgt.port"], 1, asList = True))
+		graph.edges.remove(**kwargs(payload, ["src.node"], ["src.port", "tgt.node", "tgt.port"]))
 
 	def changeEdge (self, graph, payload, context):
-		graph.edges.setMetadata(*args(
+		graph.edges.setMetadata(**kwargs(
 			payload, 
-			["src.node", "src.port", "tgt.node", "tgt.port", "metadata"], 
-			True,
-			asList = True
+			["src.node", "src.port", "tgt.node", "tgt.port", "metadata"]
 		))
 
 	def addInitial (self, graph, payload, context):
-		graph.initials.addIndex(**args(payload, ["src.data", "tgt.node", "tgt.port", "tgt.index", "metadata"], 3))
+		graph.initials.addIndex(**kwargs(payload, ["src.data", "tgt.node", "tgt.port"], ["tgt.index", "metadata"]))
 
 	def removeInitial (self, graph, payload, context):
-		graph.initials.remove(**args(payload, ["tgt.node", "tgt.port"], 1))
+		graph.initials.remove(**kwargs(payload, ["tgt.node"], ["tgt.port"]))
 
 	def addInport (self, graph, payload, context):
 		# FIXME: adding a port to a graph is different than adding one to a component
 		# (because a port on a graph is just a public label for a port on a component
 		# within the graph) yet this code attempts to treat it the same.
-		graph.inports.add(**args(payload, ["public", "node", "port", "metadata"], 3))
+		graph.inports.add(**kwargs(payload, ["public", "node", "port"], ["metadata"]))
 
 	def removeInport (self, graph, payload, context):
 		# FIXME: see addInport
-		graph.inports.remove(**args(payload, "public", True, 'Missing exported inport name'))
+		graph.inports.remove(**kwargs(payload, ["public"], errorMsg='Missing exported inport name'))
 
 	def renameInport (self, graph, payload, context):
 		# FIXME: see addInport
-		graph.inports.rename(**args(payload, ["from", "to"], True))
+		graph.inports.rename(**kwargs(payload, ["from", "to"]))
 
 	def addOutport (self, graph, payload, context):
 		# FIXME: see addInport
-		graph.outports.add(**args(payload, ["public", "node", "port", "metadata"], 3))
+		graph.outports.add(**kwargs(payload, ["public", "node", "port"], ["metadata"]))
 
 	def removeOutport (self, graph, payload, context):
 		# FIXME: see addInport
-		graph.outports.remove(**args(payload, "public", True, 'Missing exported outport name'))
+		graph.outports.remove(**kwargs(payload, ["public"], errorMsg='Missing exported outport name'))
 
 	def renameOutport (self, graph, payload, context):
 		# FIXME: see addInport
-		graph.outports.rename(**args(payload, ["from", "to"], True))
+		graph.outports.rename(**kwargs(payload, ["from", "to"]))
 
-def args (payload, keys, required = None, errorMsg = None, asList = False):
-	new = [] if asList else {}
-	keys = list(keys)
+def _iterargs (payload, requiredKeys, optionalKeys = (), errorMsg = None):
+	requiredKeys = list(requiredKeys)
+	optionalKeys = list(optionalKeys)
 
-	if required in (None, False):
-		# no keys
-		required = []
-	elif required is True:
-		# all keys
-		required = keys
-	elif isinstance(required, int):
-		# range of keys
-		required = keys[:required]
-	else:
-		assert isinstance(required, list)
+	def argName(key):
+		parts = key.split(".")
+		parts[1:] = [x.capitalize() for x in parts[1:]]
+		return ''.join(parts)
 
-	def set (key, value):
-		if asList:
-			new.append(value)
-		else:
-			new[key] = value
-
-	for key in keys:
-		try:
-			child = None
-
-			if "." in key:
-				parent, child = key.split(".", 1)
-				set(child, payload[parent][child])
-			else:
-				set(key, payload[key])
-
-		except (KeyError, TypeError):
-			if key in required:
+	for key in requiredKeys + optionalKeys:
+		value = payload
+		try:	
+			for newKey in key.split("."):
+				value = value[newKey]
+		except KeyError:
+			if key in requiredKeys:
 				raise Error(errorMsg or ("Required parameter '%s' not supplied" % key))
 			else:
-				set(child or key, None)
+				value = None
+		yield argName(key), value
 
+def args (payload, requiredKeys, optionalKeys = (), errorMsg = None):
+	new = []
+	for _, value in _iterargs(payload, requiredKeys, optionalKeys, errorMsg):
+		new.append(value)
+	return new
+
+def kwargs (payload, requiredKeys, optionalKeys = (), errorMsg = None):
+	new = {}
+	for newKey, value in _iterargs(payload, requiredKeys, optionalKeys, errorMsg):
+		new[newKey] = value
 	return new
 
 class Error (Exception):

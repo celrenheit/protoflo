@@ -25,6 +25,8 @@ class Graph (EventEmitter):
 
 		def _event (type):
 			def event (eventName, data):
+				import sys
+				print>>sys.stdout, "-"*20, eventName, type
 				self.emit(eventName + type, **data)
 
 			return event
@@ -79,36 +81,37 @@ class Graph (EventEmitter):
 		self.checkTransactionEnd()
 		
 
-	def addExport (self, publicPort, nodeKey, portKey, metadata = None):
-		# Check that node exists
-		if self.getNode(nodeKey) is None:
-			return
+	# def addExport (self, publicPort, nodeKey, portKey, metadata = None):
+	# 	# FIXME: what's the difference between this and self.inports.add()??
+	# 	# Check that node exists
+	# 	if self.getNode(nodeKey) is None:
+	# 		return
 
-		self.checkTransactionStart()
+	# 	self.checkTransactionStart()
 
-		exported = {
-			"public": publicPort,
-			"process": nodeKey,
-			"port": portKey,
-			"metadata": metadata
-		}
-		self.exports.append(exported)
-		self.emit('addExport', exported = exported)
+	# 	exported = {
+	# 		"public": publicPort,
+	# 		"process": nodeKey,
+	# 		"port": portKey,
+	# 		"metadata": metadata
+	# 	}
+	# 	self.exports.append(exported)
+	# 	self.emit('addExport', exported = exported)
 
-		self.checkTransactionEnd()
+	# 	self.checkTransactionEnd()
 
-	def removeExport (self, publicPort):
-		publicPort = publicPort.toLowerCase()
+	# def removeExport (self, publicPort):
+	# 	publicPort = publicPort.toLowerCase()
 
-		try:
-			found = next(e for e in self.exports if e["public"] == publicPort)
-		except StopIteration:
-			return
+	# 	try:
+	# 		found = next(e for e in self.exports if e["public"] == publicPort)
+	# 	except StopIteration:
+	# 		return
 
-		self.checkTransactionStart()
-		self.exports.remove(found)
-		self.emit('removeExport', found = found)
-		self.checkTransactionEnd()
+	# 	self.checkTransactionStart()
+	# 	self.exports.remove(found)
+	# 	self.emit('removeExport', found = found)
+	# 	self.checkTransactionEnd()
 
 	def toJSON (self):
 		json = {
@@ -198,6 +201,10 @@ class Graph (EventEmitter):
 
 class Exports (EventEmitter):
 	def __init__ (self, graph):
+		"""
+		Args:
+		  graph (protoflo.Graph)
+		"""
 		self.graph = graph
 		self.ports = {}
 
@@ -219,33 +226,38 @@ class Exports (EventEmitter):
 	def __len__ (self):
 		return len(self.ports)
 
-	def add (self, publicPort, nodeKey, portKey, metadata = None):
+	def add (self, public, node, port, metadata = None):
+		"""
+		Args:
+		  public (str)
+		  node (str)
+		  port (str)
+		"""
 		# Check that node exists
-		if self.graph.getNode(nodeKey) is not None:
+		if self.graph.nodes.get(node) is None:
+			# FIXME: error?
 			return
 
 		self.graph.checkTransactionStart()
-		self.ports[publicPort] = {
-			"process": nodeKey,
-			"port": portKey,
+		self.ports[public] = {
+			"process": node,
+			"port": port,
 			"metadata": metadata
 		}
-		self.emit('add', key = publicPort, port = self.ports[publicPort])
+		self.emit('add', key = public, port = self.ports[public])
 		self.graph.checkTransactionEnd()
 
-	def remove (self, publicPort):
-		publicPort = publicPort.toLowerCase()
-
-		if publicPort not in self.ports:
+	def remove (self, public):
+		if public not in self.ports:
 			return
 
 		self.graph.checkTransactionStart()
-		port = self.ports[publicPort]
+		port = self.ports[public]
 
-		self.setMetadata(publicPort, {})
-		del self.ports[publicPort]
+		self.setMetadata(public, {})
+		del self.ports[public]
 
-		self.emit('remove', key = publicPort, port = port)
+		self.emit('remove', key = public, port = port)
 		self.graph.checkTransactionEnd()
 
 	def rename (self, oldPort, newPort):
@@ -409,6 +421,7 @@ class Nodes (EventEmitter):
 		
 		self.graph.checkTransactionStart()
 
+		# FIXME: check to see if component is actually a component?
 		node = {
 			"id": id,
 			"component": component,
@@ -439,8 +452,8 @@ class Nodes (EventEmitter):
 
 		self.graph.checkTransactionStart()
 
-		self.graph.edges.remove(node = id)
-		self.graph.initials.remove(node = id)
+		self.graph.edges.remove(id)
+		self.graph.initials.remove(id)
 
 		toRemove = []
 		for exported in self.graph.exports:
@@ -557,22 +570,22 @@ class Edges (EventEmitter):
 		return self.addIndex(outNode, outPort, None, inNode, inPort, None, metadata)
 
 	# Adding an edge will emit the `addEdge` event.
-	def addIndex (self, outNode, outPort, outIndex, inNode, inPort, inIndex, metadata = None):
-		if self.graph.nodes.get(outNode) is None or self.graph.nodes.get(inNode) is None:
+	def addIndex (self, srcNode, srcPort, srcIndex, tgtNode, tgtPort, tgtIndex, metadata = None):
+		if self.graph.nodes.get(srcNode) is None or self.graph.nodes.get(tgtNode) is None:
 			return
 
 		self.graph.checkTransactionStart()
 
 		edge = {
 			"src": {
-				"node": outNode,
-				"port": outPort,
-				"index": outIndex
+				"node": srcNode,
+				"port": srcPort,
+				"index": srcIndex
 			},
 			"tgt": {
-				"node": inNode,
-				"port": inPort,
-				"index": inIndex
+				"node": tgtNode,
+				"port": tgtPort,
+				"index": tgtIndex
 			},
 			"metadata": metadata or {}
 		}
@@ -583,7 +596,7 @@ class Edges (EventEmitter):
 
 		return edge
 
-	def remove (self, node, port = None, node2 = None, port2 = None):
+	def remove (self, srcNode, srcPort = None, tgtNode = None, tgtPport = None):
 		"""Disconnect nodes
 		
 		Connections between nodes can be removed by providing the
@@ -597,25 +610,25 @@ class Edges (EventEmitter):
 
 		toRemove = []
 		toKeep = []
-		if port is not None and node2 is not None and port2 is not None:
+		if srcPort is not None and tgtNode is not None and tgtPort is not None:
 			for edge in self.edges:
-				if edge["src"]["node"] == node \
-				and edge["src"]["port"] == port \
-				and edge["tgt"]["node"] == node2 \
-				and edge["tgt"]["port"] == port2:
+				if edge["src"]["node"] == srcNode \
+				and edge["src"]["port"] == srcPort \
+				and edge["tgt"]["node"] == tgtNode \
+				and edge["tgt"]["port"] == tgtPort:
 					toRemove.append(edge)
 				else:
 					toKeep.append(edge)
-		elif port is not None:
+		elif srcPort is not None:
 			for edge in self.edges:
-				if (edge["src"]["node"] == node and edge["src"]["port"] == port) \
-				or (edge["tgt"]["node"] == node and edge["tgt"]["port"] == port):
+				if (edge["src"]["node"] == srcNode and edge["src"]["port"] == srcPort) \
+				or (edge["tgt"]["node"] == srcNode and edge["tgt"]["port"] == srcPort):
 					toRemove.append(edge)
 				else:
 					toKeep.append(edge)
 		else:
 			for edge in self.edges:
-				if edge["src"]["node"] == node or edge["tgt"]["node"] == node:
+				if edge["src"]["node"] == srcNode or edge["tgt"]["node"] == srcNode:
 					toRemove.append(edge)
 				else:
 					toKeep.append(edge)
@@ -629,7 +642,7 @@ class Edges (EventEmitter):
 
 		self.graph.checkTransactionEnd()
 
-	def get (self, node, port, node2, port2):
+	def get (self, srcNode, srcPort, tgtNode, tgtPort):
 		"""Get an edge
 		
 		Edge objects can be retrieved from the graph by the node and port IDs:
@@ -638,16 +651,16 @@ class Edges (EventEmitter):
 		"""
 
 		for edge in self.edges:
-			if edge["src"]["node"] == node and edge["src"]["port"] == port:
-				if edge["tgt"]["node"] == node2 and edge["tgt"]["port"] == port2:
+			if edge["src"]["node"] == srcNode and edge["src"]["port"] == srcPort:
+				if edge["tgt"]["node"] == tgtNode and edge["tgt"]["port"] == tgtPort:
 					return edge
 
 		return None
 
-	def setMetadata (self, node, port, node2, port2, metadata):
+	def setMetadata (self, srcNode, srcPort, tgtNode, tgtPort, metadata):
 		"""Change an edge's metadata"""
 
-		edge = self.get(node, port, node2, port2)
+		edge = self.get(srcNode, srcPort, tgtNode, tgtPort)
 
 		if edge is None:
 			return
@@ -701,19 +714,19 @@ class Initials (EventEmitter):
 		
 		return self.addIndex(data, node, port, None, metadata)
 		
-	def addIndex (self, data, node, port, index, metadata = None):
-		if self.graph.nodes.get(node) is None:
+	def addIndex (self, srcData, tgtNode, tgtPort, tgtIndex, metadata = None):
+		if self.graph.nodes.get(tgtNode) is None:
 			return
 
 		self.graph.checkTransactionStart()
 		initial = {
 			"src": {
-				"data": data
+				"data": srcData
 			},
 			"tgt": {
-				"node": node,
-				"port": port,
-				"index": None
+				"node": tgtNode,
+				"port": tgtPort,
+				"index": None  # FIXME: index???
 			},
 			"metadata": metadata or {}
 		}
@@ -723,7 +736,7 @@ class Initials (EventEmitter):
 		self.graph.checkTransactionEnd()
 		return initial
 
-	def remove (self, node, port = None):
+	def remove (self, tgtNode, tgtPort = None):
 		"""Remove Initial Information Packets
 		
 		IIPs can be removed by calling the `removeInitial` method.
@@ -736,15 +749,15 @@ class Initials (EventEmitter):
 
 		toRemove = []
 		toKeep = []
-		if port is None:
+		if tgtPort is None:
 			for edge in self.initials:
-				if edge["tgt"]["node"] == node:
+				if edge["tgt"]["node"] == tgtNode:
 					toRemove.append(edge)
 				else:
 					toKeep.append(edge)
 		else:
 			for edge in self.initials:
-				if edge["tgt"]["node"] == node and edge["tgt"]["port"] == port:
+				if edge["tgt"]["node"] == tgtNode and edge["tgt"]["port"] == tgtPort:
 					toRemove.append(edge)
 				else:
 					toKeep.append(edge)
@@ -762,6 +775,7 @@ class Initials (EventEmitter):
 				edge["tgt"]["node"] = newNodeKey
 
 
+# FIXME: make classmethod of Graph
 def loadJSON (definition, metadata = None):
 	"""Load a graph from a JSON-style dict
 

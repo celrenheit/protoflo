@@ -55,7 +55,7 @@ Running
 7. Try typing `Add` into the component search box on top-left
 
 Testing
-=======
+-------
 First install the test suite:
 ```
 nmp install -g fbp-protocol
@@ -86,35 +86,28 @@ Conversion from Noflo
 
 The code in this repo is based on a direct conversion from coffeescript+node into python+twisted of [noflo-runtime-websocket](github.com/noflo/noflo-runtime-websocket) and its dependencies.
 
-Below are several charts showing what repos and files the protoflo source code is based on.  The code is based on Noflo 0.5.4 (and needs to be updated).
-
-[noflo](github.com/noflo/noflo)
--------------------------------
-
-| Source File               | Converted File                            |
-|---------------------------|-------------------------------------------|
-| components/Graph.coffee   | protoflo/components/graph.py              |
-| lib/Helpers.coffee        | protoflo/helper.py                        |
+The chart below shows which repos and files the protoflo source code is based on.  The code is based on Noflo 0.5.4 (and needs to be updated).
 
 
-[noflo-runtime-base](github.com/noflo/noflo-runtime-base)
----------------------------------------------------------
 
-| Source File               | Converted File                            |
-|---------------------------|-------------------------------------------|
-| Base.coffee               | protoflo/server/transport/base.py         |
-| protocol/Component.coffee | protoflo/server/protocol/component.py     |
-| protocol/Graph.coffee     | protoflo/server/protocol/graph.py         |
-| protocol/Network.coffee   | protoflo/server/protocol/network.py       |
-| protocol/Runtime.coffee   | protoflo/server/protocol/runtime.py       |
+| Protoflo Module                         | Original Repo                                                       | Original File                                                            |
+|-----------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
+| protoflo/components/graph.py            | [noflo](github.com/noflo/noflo)                                     | components/Graph.coffee                                                  |
+| protoflo/server/protocol/component.py   | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Component.coffee                                                |
+| protoflo/server/protocol/graph.py       | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Graph.coffee                                                    |
+| protoflo/server/protocol/network.py     | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Network.coffee                                                  |
+| protoflo/server/protocol/runtime.py     | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Runtime.coffee                                                  |
+| protoflo/server/transport/base.py       | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | Base.coffee                                                              |
+| protoflo/server/server.py               | [noflo-runtime-websocket](github.com/noflo/noflo-runtime-websocket) | runtime/network.js                                                               |
+| protoflo/component.py                   | [noflo](github.com/noflo/noflo)                                     | lib/Component.coffee, lib/ComponentLoader.coffee                         |
+| protoflo/graph.py                       | [noflo](github.com/noflo/noflo)                                     | lib/Graph.coffee                                                         |
+| protoflo/helper.py                      | [noflo](github.com/noflo/noflo)                                     | lib/Helpers.coffee                                                       |
+| protoflo/network.py                     | [noflo](github.com/noflo/noflo)                                     | lib/Network.coffee                                                       |
+| protoflo/port.py                        | [noflo](github.com/noflo/noflo)                                     | lib/Port.coffee, lib/InPort.coffee, lib/OutPort.coffee, lib/Ports.coffee |
+| protoflo/socket.py                      | [noflo](github.com/noflo/noflo)                                     | lib/InternalSocket.coffee                                                |
+| protoflo/util.py                        | [events](github.com/Gozala/events)                                  |                                                                          |
 
 
-[noflo-runtime-websocket](github.com/noflo/noflo-runtime-websocket)
--------------------------------------------------------------------
-
-| Source File               | Converted File                            |
-|---------------------------|-------------------------------------------|
-| network.js                | protoflo/server/server.py                 |
 
 License
 =======

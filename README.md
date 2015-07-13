@@ -92,20 +92,20 @@ The chart below shows which repos and files the protoflo source code is based on
 
 | Protoflo Module                         | Original Repo                                                       | Original File                                                            |
 |-----------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
-| protoflo/components/graph.py            | [noflo](github.com/noflo/noflo)                                     | components/Graph.coffee                                                  |
-| protoflo/server/protocol/component.py   | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Component.coffee                                                |
-| protoflo/server/protocol/graph.py       | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Graph.coffee                                                    |
-| protoflo/server/protocol/network.py     | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Network.coffee                                                  |
-| protoflo/server/protocol/runtime.py     | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | protocol/Runtime.coffee                                                  |
-| protoflo/server/transport/base.py       | [noflo-runtime-base](github.com/noflo/noflo-runtime-base)           | Base.coffee                                                              |
-| protoflo/server/server.py               | [noflo-runtime-websocket](github.com/noflo/noflo-runtime-websocket) | runtime/network.js                                                               |
-| protoflo/component.py                   | [noflo](github.com/noflo/noflo)                                     | lib/Component.coffee, lib/ComponentLoader.coffee                         |
-| protoflo/graph.py                       | [noflo](github.com/noflo/noflo)                                     | lib/Graph.coffee                                                         |
-| protoflo/helper.py                      | [noflo](github.com/noflo/noflo)                                     | lib/Helpers.coffee                                                       |
-| protoflo/network.py                     | [noflo](github.com/noflo/noflo)                                     | lib/Network.coffee                                                       |
-| protoflo/port.py                        | [noflo](github.com/noflo/noflo)                                     | lib/Port.coffee, lib/InPort.coffee, lib/OutPort.coffee, lib/Ports.coffee |
-| protoflo/socket.py                      | [noflo](github.com/noflo/noflo)                                     | lib/InternalSocket.coffee                                                |
-| protoflo/util.py                        | [events](github.com/Gozala/events)                                  |                                                                          |
+| protoflo/components/graph.py            | [noflo](https://github.com/noflo/noflo)                                     | components/Graph.coffee                                                  |
+| protoflo/server/protocol/component.py   | [noflo-runtime-base](https://github.com/noflo/noflo-runtime-base)           | protocol/Component.coffee                                                |
+| protoflo/server/protocol/graph.py       | [noflo-runtime-base](https://github.com/noflo/noflo-runtime-base)           | protocol/Graph.coffee                                                    |
+| protoflo/server/protocol/network.py     | [noflo-runtime-base](https://github.com/noflo/noflo-runtime-base)           | protocol/Network.coffee                                                  |
+| protoflo/server/protocol/runtime.py     | [noflo-runtime-base](https://github.com/noflo/noflo-runtime-base)           | protocol/Runtime.coffee                                                  |
+| protoflo/server/transport/base.py       | [noflo-runtime-base](https://github.com/noflo/noflo-runtime-base)           | Base.coffee                                                              |
+| protoflo/server/server.py               | [noflo-runtime-websocket](https://github.com/noflo/noflo-runtime-websocket) | runtime/network.js                                                               |
+| protoflo/component.py                   | [noflo](https://github.com/noflo/noflo)                                     | lib/Component.coffee, lib/ComponentLoader.coffee                         |
+| protoflo/graph.py                       | [noflo](https://github.com/noflo/noflo)                                     | lib/Graph.coffee                                                         |
+| protoflo/helper.py                      | [noflo](https://github.com/noflo/noflo)                                     | lib/Helpers.coffee                                                       |
+| protoflo/network.py                     | [noflo](https://github.com/noflo/noflo)                                     | lib/Network.coffee                                                       |
+| protoflo/port.py                        | [noflo](https://github.com/noflo/noflo)                                     | lib/Port.coffee, lib/InPort.coffee, lib/OutPort.coffee, lib/Ports.coffee |
+| protoflo/socket.py                      | [noflo](https://github.com/noflo/noflo)                                     | lib/InternalSocket.coffee                                                |
+| protoflo/util.py                        | [events](https://github.com/Gozala/events)                                  |                                                                          |
 
 
 

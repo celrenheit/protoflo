@@ -3,7 +3,7 @@ from protoflo.port import InPorts, OutPorts
 
 def _toNumber(s):
 	"""Cast a string to an int or float"""
-	if not isinstance(s, basestring):
+	if not isinstance(s, str):
 		return s	
 	try:
 		return int(s)

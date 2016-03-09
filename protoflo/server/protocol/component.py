@@ -30,7 +30,7 @@ class ComponentProtocol (object):
 
 	def listComponents (self, payload, context):
 		def componentsLoaded (components):
-			for component in components.itervalues():
+			for component in components.values():
 				self.sendComponent(component, context)
 
 		def error (failure):

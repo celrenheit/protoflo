@@ -84,7 +84,7 @@ class Graph (Component):
 			
 		def connected (network):
 			self._notReady = 0
-			for name, process in network.processes.iteritems():
+			for name, process in network.processes.items():
 				if not checkComponent(name, process):
 					self._notReady += 1
 
@@ -130,7 +130,7 @@ class Graph (Component):
 
 	def _isExported (self, port, nodeName, portName, _ports, _add):
 		# First we check disambiguated exported ports
-		for pub, priv in _ports.iteritems():
+		for pub, priv in _ports.items():
 			if priv['process'] == nodeName and priv['port'] == portName:
 				return pub
 
@@ -171,13 +171,13 @@ class Graph (Component):
 		)
 
 	def findEdgePorts (self, name, process):
-		for portName, port in process.component.inPorts.iteritems():
+		for portName, port in process.component.inPorts.items():
 			targetPortName = self.isExportedInport(port, name, portName)
 
 			if targetPortName is not False:
 				self.inPorts.add(targetPortName, port)
 
-		for portName, port in process.component.outPorts.iteritems():
+		for portName, port in process.component.outPorts.items():
 			targetPortName = self.isExportedOutport(port, name, portName)
 
 			if targetPortName is not False:

@@ -115,7 +115,7 @@ class Output (Component):
 				outPort.disconnect()
 
 	def log (self, data):
-		print data
+		print(data)
 
 
 class Repeat (Component):

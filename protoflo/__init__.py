@@ -1,5 +1,5 @@
 
-from components.graph import Graph as GraphComponent
+from .components.graph import Graph as GraphComponent
 
 title = "ProtoFlo"
 name = None

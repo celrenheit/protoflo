@@ -52,7 +52,7 @@ def Boolean (metadata = None):
 	def process (data, groups, outPort):
 		d = data['data']
 
-		if type(d) in (str, unicode) and d.lower() == "false":
+		if type(d) in (str, str) and d.lower() == "false":
 			outPort.send(False)
 		else:
 			outPort.send(bool(d))

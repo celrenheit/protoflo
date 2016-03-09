@@ -1,13 +1,13 @@
 from twisted.internet import defer
 
-from util import EventEmitter
+from .util import EventEmitter
 
 import copy
 import os
 
 
 class Graph (EventEmitter):
-	
+
 	def __init__ (self, name = ""):
 		self.name = name
 		self.properties = {}
@@ -26,7 +26,7 @@ class Graph (EventEmitter):
 		def _event (type):
 			def event (eventName, data):
 				import sys
-				print>>sys.stdout, "-"*20, eventName, type
+				print("-"*20, eventName, type, file=sys.stdout)
 				self.emit(eventName + type, **data)
 
 			return event
@@ -74,12 +74,12 @@ class Graph (EventEmitter):
 		self.checkTransactionStart()
 		before = copy.deepcopy(self.properties)
 
-		for item, val in properties.iteritems():
+		for item, val in properties.items():
 			self.properties[item] = val
 
 		self.emit('changeProperties', properties = self.properties, old = before)
 		self.checkTransactionEnd()
-		
+
 
 	# def addExport (self, publicPort, nodeKey, portKey, metadata = None):
 	# 	# FIXME: what's the difference between this and self.inports.add()??
@@ -126,12 +126,12 @@ class Graph (EventEmitter):
 		if self.name != "":
 			json["properties"]["name"] = self.name
 
-		for property, value in self.properties.iteritems():
+		for property, value in self.properties.items():
 			json["properties"][property] = value
 
-		for key, port in self.inports.iteritems():
+		for key, port in self.inports.items():
 			json["inports"][key] = port
-		for key, port in self.outports.iteritems():
+		for key, port in self.outports.items():
 			json["outports"][key] = port
 
 		# Legacy exported ports
@@ -218,10 +218,10 @@ class Exports (EventEmitter):
 			raise AttributeError(publicPort)
 
 	def __iter__ (self):
-		return self.ports.itervalues()
+		return iter(self.ports.values())
 
-	def iteritems (self):
-		return self.ports.iteritems()
+	def items (self): # Changed to iteritems before any bug 
+		return iter(self.ports.items())
 
 	def __len__ (self):
 		return len(self.ports)
@@ -282,7 +282,7 @@ class Exports (EventEmitter):
 		if self.ports[publicPort]["metadata"] is None:
 			self.ports[publicPort]["metadata"] = {}
 
-		for item, val in metadata.iteritems():
+		for item, val in metadata.items():
 			if val is not None:
 				self.ports[publicPort]["metadata"][item] = val
 			else:
@@ -292,11 +292,11 @@ class Exports (EventEmitter):
 		self.graph.checkTransactionEnd()
 
 	def removeFromNode (self, nodeKey):
-		for key in [key for key, port in self.ports.iteritems() if port["process"] == nodeKey]:
+		for key in [key for key, port in self.ports.items() if port["process"] == nodeKey]:
 			self.remove(key)
 
 	def renameNode (self, oldNodeKey, newNodeKey):
-		for port in self.ports.itervalues():
+		for port in self.ports.values():
 			if port["process"] == oldNodeKey:
 				port["process"] = newNodeKey
 
@@ -309,7 +309,7 @@ class Groups (EventEmitter):
 		self.groups = {}
 
 	def __iter__ (self):
-		return self.groups.itervalues()
+		return iter(self.groups.values())
 
 	def __len__ (self):
 		return len(self.groups)
@@ -365,7 +365,7 @@ class Groups (EventEmitter):
 			group = self.groups[groupName]
 			before = copy.deepcopy(group["metadata"])
 
-			for item, val in metadata.iteritems():
+			for item, val in metadata.items():
 				if val is not None:
 					group["metadata"][item] = val
 				else:
@@ -376,14 +376,14 @@ class Groups (EventEmitter):
 		self.graph.checkTransactionEnd()
 
 	def removeNode (self, nodeKey):
-		for group in self.groups.iteritems():
+		for group in self.groups.items():
 			try:
 				group.nodes.remove(nodeKey)
 			except ValueError:
 				pass
 
 	def renameNode (self, oldNodeKey, newNodeKey):
-		for group in self.groups.iteritems():
+		for group in self.groups.items():
 			try:
 				idx = group.nodes.index(oldNodeKey)
 				group.nodes[idx] = newNodeKey
@@ -406,19 +406,19 @@ class Nodes (EventEmitter):
 
 	def add (self, id, component, metadata = None):
 		"""Add a node to the graph
-		
+
 		Nodes are identified by an ID unique to the graph. Additionally,
 		a node may contain information on what NoFlo component it is and
 		possible display coordinates.
-		
+
 		For example:
 			myGraph.nodes.add('Read, 'ReadFile', {
 				"x": 91
 				"y": 154
 			}
-		
+
 		Addition of a node will emit the 'addNode' event on the graph."""
-		
+
 		self.graph.checkTransactionStart()
 
 		# FIXME: check to see if component is actually a component?
@@ -436,12 +436,12 @@ class Nodes (EventEmitter):
 
 	def remove (self, id):
 		"""Remove a node from the graph
-		
+
 		Existing nodes can be removed from a graph by their ID. This
 		will remove the node and also remove all edges connected to it.
-		
+
 			myGraph.nodes.remove('Read')
-		
+
 		Once the node has been removed, the 'removeNode' event will be
 		emitted."""
 
@@ -479,9 +479,9 @@ class Nodes (EventEmitter):
 
 	def get (self, id):
 		"""Get a node
-		
+
 		Node objects can be retrieved from the graph by their ID:
-		
+
 			myNode = myGraph.getNode 'Read'
 		"""
 		# FIXME: this could become slow for large graphs: could use a dict
@@ -529,7 +529,7 @@ class Nodes (EventEmitter):
 
 		before = copy.deepcopy(node["metadata"])
 
-		for item, val in metadata.iteritems():
+		for item, val in metadata.items():
 			if val is not None:
 				node["metadata"][item] = val
 			else:
@@ -553,13 +553,13 @@ class Edges (EventEmitter):
 
 	def add (self, outNode, outPort, inNode, inPort, metadata = None):
 		"""Connect nodes
-		
+
 		Nodes can be connected by adding edges between a node's outport
 		and another node's inport:
-		
+
 			myGraph.edges.add('Read', 'out', 'Display', 'in')
 			myGraph.edges.addIndex('Read', 'out', None, 'Display', 'in', 2)
-		
+
 		Adding an edge will emit the 'addEdge' event."""
 
 		# Don't add a duplicate edge
@@ -596,14 +596,14 @@ class Edges (EventEmitter):
 
 		return edge
 
-	def remove (self, srcNode, srcPort = None, tgtNode = None, tgtPport = None):
+	def remove (self, srcNode, srcPort = None, tgtNode = None, tgtPort = None):
 		"""Disconnect nodes
-		
+
 		Connections between nodes can be removed by providing the
 		nodes and ports to disconnect.
-		
+
 			myGraph.edges.remove('Display', 'out', 'Foo', 'in')
-		
+
 		Removing a connection will emit the `removeEdge` event."""
 
 		self.graph.checkTransactionStart()
@@ -644,9 +644,9 @@ class Edges (EventEmitter):
 
 	def get (self, srcNode, srcPort, tgtNode, tgtPort):
 		"""Get an edge
-		
+
 		Edge objects can be retrieved from the graph by the node and port IDs:
-		
+
 			myEdge = myGraph.edges.get('Read', 'out', 'Write', 'in')
 		"""
 
@@ -668,7 +668,7 @@ class Edges (EventEmitter):
 		self.graph.checkTransactionStart()
 		before = copy.deepcopy(edge["metadata"])
 
-		for item, val in metadata.iteritems():
+		for item, val in metadata.items():
 			if val is not None:
 				edge["metadata"][item] = val
 			else:
@@ -699,21 +699,21 @@ class Initials (EventEmitter):
 
 	def add (self, data, node, port, metadata = None):
 		"""Adding Initial Information Packets
-		
+
 		Initial Information Packets (IIPs) can be used for sending data
 		to specified node inports without a sending node instance.
-		
+
 		IIPs are especially useful for sending configuration information
 		to components at NoFlo network start-up time. This could include
 		filenames to read, or network ports to listen to.
-		
+
 			myGraph.initials.add('somefile.txt', 'Read', 'source')
 			myGraph.initials.addIndex('somefile.txt', 'Read', 'source', 2)
-		
+
 		Adding an IIP will emit a 'addInitial' event."""
-		
+
 		return self.addIndex(data, node, port, None, metadata)
-		
+
 	def addIndex (self, srcData, tgtNode, tgtPort, tgtIndex, metadata = None):
 		if self.graph.nodes.get(tgtNode) is None:
 			return
@@ -738,11 +738,11 @@ class Initials (EventEmitter):
 
 	def remove (self, tgtNode, tgtPort = None):
 		"""Remove Initial Information Packets
-		
+
 		IIPs can be removed by calling the `removeInitial` method.
-		
+
 			myGraph.initials.remove('Read', 'source')
-		
+
 		Remove an IIP will emit a 'removeInitial' event."""
 
 		self.graph.checkTransactionStart()
@@ -804,14 +804,14 @@ def loadJSON (definition, metadata = None):
 
 	# Set Graph Properties
 	properties = {}
-	for property, value in definition['properties'].iteritems():
+	for property, value in definition['properties'].items():
 		if property != 'name':
 			properties[property] = value
 
 	graph.setProperties(properties)
 
 	# Add Nodes
-	for id, process in definition['processes'].iteritems():
+	for id, process in definition['processes'].items():
 		graph.nodes.add(
 			id,
 			process['component'],
@@ -883,12 +883,12 @@ def loadJSON (definition, metadata = None):
 			graph.addExport(exported['public'], processId, portId, metadata)
 
 	if "inports" in definition:
-		for pub, priv in definition['inports'].iteritems():
+		for pub, priv in definition['inports'].items():
 			metadata = priv['metadata'] if "metadata" in priv else {}
 			graph.addInport(pub, priv['process'], priv['port'], metadata)
 
 	if "outports" in definition:
-		for pub, priv in definition['outports'].iteritems():
+		for pub, priv in definition['outports'].items():
 			metadata = priv['metadata'] if "metadata" in priv else {}
 			graph.addOutport(pub, priv['process'], priv['port'], metadata)
 
@@ -920,7 +920,7 @@ def loadFile (filename, metadata = None):
 		from json import loads
 		from subprocess import check_output
 		return loadJSON(
-			loads(check_output(["fbp", filename])),
+			loads(check_output(["fbp", filename]).decode("UTF-8")),
 			metadata
 		)
 	elif ext == ".json":

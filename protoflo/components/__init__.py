@@ -7,6 +7,7 @@ from twisted.python.filepath import FilePath
 from twisted.plugin import pickle
 
 import os, sys
+import collections
 
 # Plugin modules "protoflo_*" must have an __init__.py with a __components__ dict attribute.
 # This lists the name: class / genreator function / relative path to '.fbp' or '.json' file.
@@ -33,7 +34,7 @@ class IComponent (Interface):
 		@type subgraph: bool
 		@ivar subgraph: Whether this component is a subgraph.
 	""")
-	
+
 	def __init__ (**options):
 		"""
 		Initialises the component with a set of options.
@@ -162,7 +163,7 @@ def _generateCacheEntry (provider):
 			component = v()
 
 		# It's a function (eg getComponent)
-		elif callable(v):
+		elif isinstance(v, collections.Callable):
 			fileName = namedModule(v.__module__).__file__
 			objectName = "{:s}.{:s}".format(v.__module__, v.__name__)
 			component = v()
@@ -176,7 +177,7 @@ def _generateCacheEntry (provider):
 
 		# It's a string - hopefully a '.fbp' or '.json'
 		else:
-			import graph
+			from . import graph
 			fileName = os.path.join(moduleDir, str(v))
 			objectName = None
 			component = graph.loadFile(fileName)
@@ -212,8 +213,8 @@ def _generateCacheEntry (provider):
 				"inPorts": [],
 				"outPorts": []
 			}
-
-			for portName, port in component.inPorts.iteritems():
+			print(component.inPorts)
+			for portName, port in component.inPorts.items():
 				# TODO: determine if description is optional for in-ports
 				inPort = {
 					# FIXME: unicode?
@@ -232,7 +233,7 @@ def _generateCacheEntry (provider):
 
 				details["inPorts"].append(inPort)
 
-			for portName, port in component.outPorts.iteritems():
+			for portName, port in component.outPorts.items():
 				data = {
 					# FIXME: unicode?
 					"id": str(portName),
@@ -251,7 +252,7 @@ def _generateCacheEntry (provider):
 		d.callback(dropin)
 
 	try:
-		results = [processComponent(k, v) for k, v in components.iteritems()]
+		results = [processComponent(k, v) for k, v in components.items()]
 	except:
 		return defer.fail(failure.Failure())
 

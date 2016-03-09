@@ -1,9 +1,9 @@
 from twisted.internet import reactor, defer
 from twisted.python import failure
 
-from util import EventEmitter, debounce
-from socket import InternalSocket
-from component import ComponentLoader
+from .util import EventEmitter, debounce
+from .socket import InternalSocket
+from .component import ComponentLoader
 
 from collections import deque
 from datetime import datetime
@@ -169,7 +169,7 @@ class Network (EventEmitter):
 
 		def error (reason):
 			# TODO: log.
-			print ("subscribeGraph: Error: " + str(reason))
+			print(("subscribeGraph: Error: " + str(reason)))
 			processOps()
 
 		def processOps (result = None):
@@ -250,7 +250,7 @@ class Processes (EventEmitter):
 	__getitem__ = get
 
 	def __iter__ (self):
-		return self.processes.itervalues()
+		return iter(self.processes.values())
 
 	def add (self, id, component = None, metadata = None):
 		if id in self.processes:
@@ -267,12 +267,12 @@ class Processes (EventEmitter):
 			instance.nodeId = id
 			process.component = instance
 
-			for name, port in instance.inPorts.iteritems():
+			for name, port in instance.inPorts.items():
 				port.node = id
 				port.nodeInstance = instance
 				port.name = name
 
-			for name, port in instance.outPorts.iteritems():
+			for name, port in instance.outPorts.items():
 				port.node = id
 				port.nodeInstance = instance
 				port.name = name
@@ -314,10 +314,10 @@ class Processes (EventEmitter):
 
 		process.id = newId
 
-		for port in instance.inPorts.itervalues():
+		for port in instance.inPorts.values():
 			port.node = newId
 
-		for port in instance.outPorts.itervalues():
+		for port in instance.outPorts.values():
 			port.node = newId
 
 		self.processes[newId] = process

@@ -1,10 +1,10 @@
-from zope.interface import implements
+from zope.interface import implementer
 
 from twisted.internet import defer, threads
 
-from util import EventEmitter
-from port import InPorts, OutPorts, InPort, OutPort
-from components import IComponent
+from .util import EventEmitter
+from .port import InPorts, OutPorts, InPort, OutPort
+from .components import IComponent
 
 import copy
 
@@ -20,8 +20,8 @@ def _combine (base, new):
 	return copy.deepcopy(base) + new
 
 
+@implementer(IComponent)
 class Component (EventEmitter):
-	implements(IComponent)
 
 	description = ""
 	icon = None
@@ -120,12 +120,12 @@ class ComponentLoader (EventEmitter):
 					self.components[component.componentName] = component
 
 			d.callback(self.components)
-			
+
 			self.processing = False
 			self.ready = True
 			self.emit("ready")
 
-		from components import getCache
+		from .components import getCache
 		getCache().addCallback(complete)
 		#threads.deferToThread(getCache).addCallback(complete)
 
@@ -145,7 +145,7 @@ class ComponentLoader (EventEmitter):
 			component = self.components[name]
 		except KeyError:
 			# try a short-name lookup
-			for key in self.components.iterkeys():
+			for key in self.components.keys():
 				parts = key.split('/')
 				# note: currently only the builtin Graph component within
 				# protoflo.__init__ has no collection name

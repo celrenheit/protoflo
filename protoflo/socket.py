@@ -1,5 +1,5 @@
 
-from util import EventEmitter
+from .util import EventEmitter
 
 class InternalSocket (EventEmitter):
 	src = None

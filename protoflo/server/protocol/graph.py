@@ -178,13 +178,13 @@ class GraphProtocol (object):
 
 			comps = components.components()
 			comps = dict((c.componentName, c.details) for c in comps.result)
-			print>>sys.stdout, "****", comps.keys()
+			print("****", list(comps.keys()), file=sys.stdout)
 
 
 			def getPorts(portType):
 				results = []
 				src = graph.inports if portType == 'inPorts' else graph.outports
-				for public, port in src.iteritems():
+				for public, port in src.items():
 					node = graph.nodes.get(port['process'])
 					comp = comps[node['component']]
 					for p in comp[portType]:
@@ -222,7 +222,7 @@ class GraphProtocol (object):
 
 	def addEdge (self, graph, payload, context):
 		graph.edges.addIndex(**kwargs(
-			payload, 
+			payload,
 			["src.node", "src.port", "tgt.node", "tgt.port"],
 			["src.index", "tgt.index", "metadata"]
 		))
@@ -232,7 +232,7 @@ class GraphProtocol (object):
 
 	def changeEdge (self, graph, payload, context):
 		graph.edges.setMetadata(**kwargs(
-			payload, 
+			payload,
 			["src.node", "src.port", "tgt.node", "tgt.port", "metadata"]
 		))
 
@@ -279,7 +279,7 @@ def _iterargs (payload, requiredKeys, optionalKeys = (), errorMsg = None):
 
 	for key in requiredKeys + optionalKeys:
 		value = payload
-		try:	
+		try:
 			for newKey in key.split("."):
 				value = value[newKey]
 		except KeyError:

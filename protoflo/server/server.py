@@ -5,7 +5,7 @@ from twisted.internet import reactor
 
 import json
 
-from transport.base import BaseTransport
+from .transport.base import BaseTransport
 
 class WebSocketRuntime (BaseTransport):
 	def __init__ (self):
@@ -19,11 +19,12 @@ class WebSocketRuntime (BaseTransport):
 
 	def send (self, protocol, topic, payload, context):
 		if isinstance(payload, Exception):
+			print("???",protocol, topic, payload, context)
 			payload = {
 				# FIXME: the error type could be nice to send along, but it
 				# causes the noflo unittests to fail.  talk with developers:
 				#"type": payload.__class__.__name__,
-				"message": payload.message
+				"message": str(payload)
 			}
 
 		response = {
@@ -34,9 +35,9 @@ class WebSocketRuntime (BaseTransport):
 
 		log.msg("Response", response)
 
-		context.sendMessage(json.dumps(response))
+		context.sendMessage(json.dumps(response).encode("UTF-8"))
 
-class NoFloUiProtocol (WebSocketServerProtocol): 
+class NoFloUiProtocol (WebSocketServerProtocol):
 	def onConnect (self, request):
 		return 'noflo'
 
@@ -52,14 +53,14 @@ class NoFloUiProtocol (WebSocketServerProtocol):
 		if isBinary:
 			raise ValueError("WebSocket message must be UTF-8")
 
-		cmd = json.loads(payload)
+		cmd = json.loads(payload.decode("UTF-8"))
 
 		log.msg("Command", cmd)
 
 		self.factory.runtime.receive(
-			cmd['protocol'], 
-			cmd['command'], 
-			cmd.get("payload", {}), 
+			cmd['protocol'],
+			cmd['command'],
+			cmd.get("payload", {}),
 			self
 		)
 
@@ -97,4 +98,3 @@ def runtime (server, port):
 
 	if not reactor.running:
 		reactor.run()
-

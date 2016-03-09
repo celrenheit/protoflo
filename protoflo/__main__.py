@@ -2,34 +2,34 @@ import sys, os
 import json
 
 def register (user_id, label, ip, port):
-	import httplib
+	import http.client
 	import uuid
 
 	runtime_id = str(uuid.uuid4())
 
-	conn = httplib.HTTPConnection("api.flowhub.io", 80)
+	conn = http.client.HTTPConnection("api.flowhub.io", 80)
 	conn.connect()
 
 	url = "/runtimes/" + runtime_id
 	headers = {"Content-type": "application/json"}
 	data = {
-		'type': 'protoflo', 
+		'type': 'protoflo',
 		'protocol': 'websocket',
-		'address': ip + ":" + str(port), 
+		'address': ip + ":" + str(port),
 		'id': runtime_id,
-		'label': label, 
-		'port': port, 
+		'label': label,
+		'port': port,
 		'user': user_id,
 		'secret': "122223333",
 	}
 
-	conn.request("PUT", url, json.dumps(data), headers)
+	conn.request("PUT", url, json.dumps(data).encode("UTF-8"), headers)
 	response = conn.getresponse()
 
 	if response.status != 201:
 		raise ValueError("Could not create runtime " + str(response.status) + str(response.read()))
 	else:
-		print "Runtime registered with ID", runtime_id
+		print("Runtime registered with ID", runtime_id)
 
 if __name__ == "__main__":
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
 	elif args.command == 'run':
 		from twisted.internet import reactor
-		import graph, network
+		from . import graph, network
 
 		def onRunning (net):
 			@net.on("end")

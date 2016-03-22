@@ -7,27 +7,35 @@ compatible and integrated with [NoFlo](http://noflojs.org)
 
 Installing
 ----------
-After installing python 2.7:
+
+### In a first terminal window:
+
+After installing python 3:
 ```
-git clone https://github.com/chadrik/protoflo
+git clone https://github.com/celrenheit/protoflo
 cd protoflo
 sudo pip install -r requirements.txt
 ```
 
+Run the server: 
+
+```shell
+python -m protoflo runtime
+```
+
+### In a second terminal window:
+
 If you want to use the NoFlo web UI, install and run that as well:
 
 ```
-npm install -g n
 npm install -g bower
 npm install -g grunt-cli
-sudo n 0.10
 
 mkdir noflo
 cd noflo
 
 git clone https://github.com/noflo/noflo-ui
 cd noflo-ui
-git checkout 0.9.0
 npm install
 # running bower before grunt prompts to resolve a dependency conflict which otherwise causes grunt to fail
 bower install
@@ -38,15 +46,11 @@ python -m SimpleHTTPServer
 Running
 -------
 1. `cd` into the directory that you cloned ProtoFlo into.
-2. Register ProtoFlo as a NoFlo runtime (discover what is your UID
-   on NoFlo)
-   ```
-   python -m protoflo register --user YOUR_UID --label ProtoFlo
-   ```
-3. Start the ProtoFlo runtime.
+2. Start the ProtoFlo runtime.
    ```
    python -m protoflo runtime
    ```
+3. *Important* (need to find a better way): Register the runtime using this url: [http://localhost:8000/index.html#runtime/endpoint?protocol%3Dwebsocket%26address%3Dws%3A%2F%2Flocalhost%3A3569%26](http://localhost:8000/index.html#runtime/endpoint?protocol%3Dwebsocket%26address%3Dws%3A%2F%2Flocalhost%3A3569%26)
 4. Create a new project in NoFlo selecting the ProtoFlo runtime
 5. Inside the new project/graph, select the appropriate ProtoFlo
    runtime clicking on the top-right menu
